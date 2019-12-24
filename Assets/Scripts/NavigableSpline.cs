@@ -7,6 +7,7 @@ using UnityEngine.U2D;
 using UnityEngine;
 using Unity.Collections;
 using UnityEditor;
+using System.Geometry;
 //using System.Numerics;
 
 namespace Assets.Scripts
@@ -14,6 +15,8 @@ namespace Assets.Scripts
     class NavigableSpline : MonoBehaviour
     {
         public int segmentsPerBezier = 10;
+        public float offsetDistance;
+        public int offsetNum;
         internal List<Waypoint> waypoints;
 
         private Spline spriteShapeSpline;
@@ -26,6 +29,7 @@ namespace Assets.Scripts
             {
                 throw new System.Exception("Error: no sprite shape renderer on GameObject");
             }
+            System.Console.Out.WriteLine("waypoints initialized");
             this.spriteShapeSpline = spriteShapeController.spline;
             this.waypoints = this.GenerateWaypointsFromSpline(this.spriteShapeSpline);
         }
@@ -43,7 +47,6 @@ namespace Assets.Scripts
             for (var i = 0; i < numberOfPoints; i++)
             {
                 var position = spline.GetPosition(i);
-                vectorWaypoints.Add(position);
                 int nextPointIndex = i + 1;
                 if (i + 1 >= numberOfPoints)
                 {
@@ -55,12 +58,12 @@ namespace Assets.Scripts
                 }
                 var nextPosition = spline.GetPosition(nextPointIndex);
 
-                var path = Handles.MakeBezierPoints(
+                var path = this.GetInnerCoordsForOffsetBezier(
                     position,
                     nextPosition,
                     position + spline.GetRightTangent(i),
                     nextPosition + spline.GetLeftTangent(nextPointIndex),
-                    this.segmentsPerBezier);
+                    offsetDistance);
 
                 vectorWaypoints.AddRange(path);
             }
@@ -87,15 +90,36 @@ namespace Assets.Scripts
             return new System.Numerics.Vector2(vect.x, vect.y);
         }
 
-        private IEnumerable<Vector3> GetCoordsForBezier(Vector3 start, Vector3 end, Vector3 startTan, Vector3 endTan)
+        private IEnumerable<Vector3> GetInnerCoordsForOffsetBezier(Vector3 start, Vector3 end, Vector3 startTan, Vector3 endTan, float offsetDist)
         {
-            var inputBezier = new System.Geometry.Bezier(
+            var inputBezier = new Bezier(
                     ConvertToNumericVector2(start),
                     ConvertToNumericVector2(startTan),
                     ConvertToNumericVector2(endTan),
                     ConvertToNumericVector2(end));
-            //TODO: implement offset??
-            return null;
+
+            var offsetBezier = inputBezier.Offset(offsetDist);
+            if(offsetBezier == null || offsetBezier.Count <= 0)
+            {
+                offsetBezier = new List<Bezier> { inputBezier };
+            }
+
+            var workingPath = new List<Vector3>();
+            var segmentPerSubBezier = this.segmentsPerBezier / offsetBezier.Count;
+            foreach(var bez in offsetBezier)
+            {
+                workingPath.AddRange(this.GetInnerCoordsFromBezier(bez, segmentPerSubBezier).Select(v => new Vector3(v.X, v.Y)));
+            }
+            return workingPath;
+        }
+
+        private IEnumerable<System.Numerics.Vector2> GetInnerCoordsFromBezier(Bezier bez, int numSegments)
+        {
+            float stepPerSegment = 1f / numSegments;
+            for(var i = 0; i < numSegments; i++)
+            {
+                yield return bez.Position(stepPerSegment * i);
+            }
         }
 
         public void OnDrawGizmosSelected()

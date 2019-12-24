@@ -16,6 +16,11 @@ namespace Assets.Scripts
             this.position = position;
         }
 
+        public Waypoint(System.Numerics.Vector2 numericsPosition)
+        {
+            this.position = new Vector3(numericsPosition.X, numericsPosition.Y);
+        }
+
         public void SetNext(Waypoint next)
         {
             var dist = Vector3.Distance(this.position, next.position);

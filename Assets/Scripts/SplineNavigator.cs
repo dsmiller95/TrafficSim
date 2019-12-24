@@ -14,28 +14,30 @@ namespace Assets.Scripts
     {
         public GameObject spriteShape;
 
-        private Waypoint lastWaypoint;
+        private NavigableSpline splineNavigable;
+        private Waypoint _lastWaypoint;
+
+        private readonly int firstWaypoint = 0;
+        private Waypoint lastWaypoint {
+            get {
+                if(this._lastWaypoint == null)
+                {
+                    this._lastWaypoint = this.splineNavigable.waypoints[this.firstWaypoint];
+                }
+                return this._lastWaypoint;
+            }
+            set
+            {
+                this._lastWaypoint = value;
+            }
+        }
         private float distanceFromLastWaypoint;
 
 
         // Start is called before the first frame update
         void Start()
         {
-            var navigableSpline = this.spriteShape.GetComponent<NavigableSpline>();
-            if (navigableSpline == null)
-            {
-                throw new System.Exception("Error: no sprite shape renderer on GameObject");
-            }
-
-            if (navigableSpline.waypoints == null)
-            {
-                throw new System.Exception("Error: waypoints list not initialized");
-            }
-            lastWaypoint = navigableSpline.waypoints[0];
-            if (lastWaypoint == null)
-            {
-                throw new System.Exception("Error: no waypoints found");
-            }
+            this.splineNavigable = this.spriteShape.GetComponent<NavigableSpline>();
             distanceFromLastWaypoint = 0;
         }
 
@@ -53,23 +55,24 @@ namespace Assets.Scripts
             var newDistance = distance + distanceFromLastWaypoint;
             while (true)
             {
-                if (newDistance > lastWaypoint.GetDistanceToNext())
+                var distanceToNext = this.lastWaypoint.GetDistanceToNext();
+                if (newDistance > distanceToNext)
                 {
-                    newDistance -= lastWaypoint.GetDistanceToNext();
-                    if (lastWaypoint.next == null)
+                    newDistance -= distanceToNext;
+                    if (this.lastWaypoint.next == null)
                     {
                         return;
                     }
-                    lastWaypoint = lastWaypoint.next;
+                    this.lastWaypoint = this.lastWaypoint.next;
                 }
                 else if (newDistance < 0)
                 {
-                    newDistance += lastWaypoint.GetDistanceToPrev();
-                    if (lastWaypoint.previous == null)
+                    newDistance += this.lastWaypoint.GetDistanceToPrev();
+                    if (this.lastWaypoint.previous == null)
                     {
                         return;
                     }
-                    lastWaypoint = lastWaypoint.previous;
+                    this.lastWaypoint = this.lastWaypoint.previous;
                 }
                 else
                 {
@@ -78,7 +81,7 @@ namespace Assets.Scripts
                 }
             }
 
-            var newPosition = this.GetPositionFromCurrentWaypointAndDistance();
+            var newPosition = this.GetPositionFromCurrentWaypointAndDistance(this.lastWaypoint);
 
             this.transform.position = newPosition;
             var nextPosition = distance > 0 ? this.lastWaypoint.next.position : this.lastWaypoint.position;
@@ -91,9 +94,9 @@ namespace Assets.Scripts
             //this.transform.rotation.SetLookRotation(lookNormalVector);
         }
 
-        private Vector3 GetPositionFromCurrentWaypointAndDistance()
+        private Vector3 GetPositionFromCurrentWaypointAndDistance(Waypoint point)
         {
-            return this.lastWaypoint.position + (this.lastWaypoint.next.position - this.lastWaypoint.position).normalized * this.distanceFromLastWaypoint;
+            return point.position + (point.next.position - point.position).normalized * this.distanceFromLastWaypoint;
         }
     }
 }
