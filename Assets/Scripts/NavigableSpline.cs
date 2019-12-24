@@ -27,7 +27,6 @@ namespace Assets.Scripts
                 throw new System.Exception("Error: no sprite shape renderer on GameObject");
             }
             this.spriteShapeSpline = spriteShapeController.spline;
-
             this.waypoints = this.GenerateWaypointsFromSpline(this.spriteShapeSpline);
         }
 

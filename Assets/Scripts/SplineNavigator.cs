@@ -27,7 +27,15 @@ namespace Assets.Scripts
                 throw new System.Exception("Error: no sprite shape renderer on GameObject");
             }
 
+            if (navigableSpline.waypoints == null)
+            {
+                throw new System.Exception("Error: waypoints list not initialized");
+            }
             lastWaypoint = navigableSpline.waypoints[0];
+            if (lastWaypoint == null)
+            {
+                throw new System.Exception("Error: no waypoints found");
+            }
             distanceFromLastWaypoint = 0;
         }
 
