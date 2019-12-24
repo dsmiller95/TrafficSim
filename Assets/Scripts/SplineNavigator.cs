@@ -13,6 +13,7 @@ namespace Assets.Scripts
     class SplineNavigator : MonoBehaviour
     {
         public GameObject spriteShape;
+        public int navigableRouteIndex = 0;
 
         private NavigableSpline splineNavigable;
         private Waypoint _lastWaypoint;
@@ -22,7 +23,7 @@ namespace Assets.Scripts
             get {
                 if(this._lastWaypoint == null)
                 {
-                    this._lastWaypoint = this.splineNavigable.waypoints[this.firstWaypoint];
+                    this._lastWaypoint = this.splineNavigable.navigableRoutes[navigableRouteIndex][this.firstWaypoint];
                 }
                 return this._lastWaypoint;
             }
@@ -85,13 +86,7 @@ namespace Assets.Scripts
 
             this.transform.position = newPosition;
             var nextPosition = distance > 0 ? this.lastWaypoint.next.position : this.lastWaypoint.position;
-            //var lookNormalVector = (this.transform.position - nextPosition).normalized;
-            //var tmpQuat = new Quaternion();
-            //tmpQuat.SetFromToRotation(this.transform.position, nextPosition);
-            //this.transform.rotation = tmpQuat;
             this.transform.right = nextPosition - transform.position;
-            //this.transform.LookAt(nextPosition, new Vector3(0, 0, 1));
-            //this.transform.rotation.SetLookRotation(lookNormalVector);
         }
 
         private Vector3 GetPositionFromCurrentWaypointAndDistance(Waypoint point)

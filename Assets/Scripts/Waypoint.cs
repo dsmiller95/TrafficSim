@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace Assets.Scripts
 {
-    class Waypoint
+    public class Waypoint
     {
         public Vector3 position;
         public Waypoint previous;
@@ -39,6 +39,11 @@ namespace Assets.Scripts
         public float GetDistanceToPrev()
         {
             return this.prevDist;
+        }
+
+        public void PlaceSelfInsideTransform(Transform transform)
+        {
+            this.position = transform.TransformPoint(this.position);
         }
     }
 }
