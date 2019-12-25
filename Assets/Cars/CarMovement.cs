@@ -9,27 +9,37 @@ public class CarMovement : MonoBehaviour
 {
     public float velocity = 1;
 
+    public GameObject farFront;
+    public GameObject closeFront;
+
     private SplineNavigator navigator;
-    private IBooleanCarSensor inFrontSensor;
+
+    private IBooleanCarSensor farFrontSensor;
+    private IBooleanCarSensor closeFrontSensor;
 
     // Start is called before the first frame update
     void Start()
     {
         this.navigator = this.GetComponent<SplineNavigator>();
-        this.inFrontSensor = this.GetComponentInChildren<ColliderSensor>();
+        this.farFrontSensor = this.farFront.GetComponent<ColliderSensor>();
+        this.closeFrontSensor = this.closeFront.GetComponent<ColliderSensor>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!inFrontSensor.Sense())
+        var currentVel = this.velocity;
+        if (this.farFrontSensor.Sense())
         {
-            //Only move if nothing in front
-            this.UpdatePosition(Time.deltaTime);
-        } 
+            currentVel /= 2;
+        }
+        if (!this.closeFrontSensor.Sense())
+        {
+            this.UpdatePosition(Time.deltaTime, currentVel);
+        }
     }
 
-    private void UpdatePosition(float deltaT)
+    private void UpdatePosition(float deltaT, float velocity)
     {
         this.navigator.TranslateAcrossSpline(velocity * deltaT);
         this.transform.Translate(0, 0, -1);
