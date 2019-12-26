@@ -103,6 +103,8 @@ MonoBehaviour:
   farFront: {fileID: 4773959647900043321}
   closeFront: {fileID: 7622471710317030329}
   actionSet: {fileID: 3800517342871950875}
+  maxSpeed: 5
+  direction: 0
 --- !u!114 &1517511415163971627
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -115,7 +117,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 039eb436c83e7c749b21d83ce781cafd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseVelocity: 2
+  maxAcceleration: 2
 --- !u!114 &8028088371601934708
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -176,7 +178,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2103942578301451711}
-  - component: {fileID: 2631432905722763649}
+  - component: {fileID: 4409682391354042153}
   m_Layer: 0
   m_Name: CarActions
   m_TagString: Untagged
@@ -198,7 +200,7 @@ Transform:
   m_Father: {fileID: 2345771687714094422}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2631432905722763649
+--- !u!114 &4409682391354042153
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -207,7 +209,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 3800517342871950875}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 581243acb3bdf0945a3b0c967bc340b9, type: 3}
+  m_Script: {fileID: 11500000, guid: 238604429d5a14b408002f69882d1111, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &4773959647900043321

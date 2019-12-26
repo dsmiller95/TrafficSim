@@ -10,6 +10,7 @@ namespace Assets.Scripts
         public GameObject spawnTarget;
         public List<int> navigableRouteIndexes = new List<int>(0);
         public float spawnSpeed = 4;
+        public bool spawnDirection;
 
         public float avgSpawnInterval = 1;
 
@@ -27,7 +28,11 @@ namespace Assets.Scripts
             var navigator = spawned.GetComponent<SplineNavigator>();
             navigator.spriteShape = targetRoad;
             navigator.navigableRouteIndex = this.navigableRouteIndexes[Random.Range(0, this.navigableRouteIndexes.Count)];
-            spawned.GetComponent<CarMovement>().SetForwardVelocity(this.spawnSpeed);
+
+            var carMover = spawned.GetComponent<CarMovement>();
+            carMover.SetForwardVelocity(this.spawnSpeed);
+            carMover.SetDirection(this.spawnDirection);
+
             var rigidbody = spawned.GetComponent<Rigidbody2D>();
             rigidbody.isKinematic = false;
         }

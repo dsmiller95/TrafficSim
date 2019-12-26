@@ -11,6 +11,8 @@ public class CarMovement : MonoBehaviour, ICarActionable
     public GameObject farFront;
     public GameObject closeFront;
     public GameObject actionSet;
+    public float maxSpeed;
+    public bool direction;
 
     private SplineNavigator navigator;
     private ICarBehavior carBehavior;
@@ -19,6 +21,7 @@ public class CarMovement : MonoBehaviour, ICarActionable
     private Dictionary<CarActionTypes, ICarAction> actions;
 
     private float velocity = 0;
+    private float acceleration = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -40,9 +43,11 @@ public class CarMovement : MonoBehaviour, ICarActionable
     // Update is called once per frame
     void Update()
     {
+        this.velocity += this.acceleration * Time.deltaTime;
+        this.velocity = Mathf.Min(this.maxSpeed, Mathf.Max(0, this.velocity));
         if(this.velocity != 0)
         {
-            this.UpdatePosition(Time.deltaTime, this.velocity);
+            this.UpdatePosition(Time.deltaTime, this.velocity * (this.direction ? 1 : -1));
         }
         this.carBehavior.ExecuteBehavior(this.sensors, this.actions);
     }
@@ -62,6 +67,16 @@ public class CarMovement : MonoBehaviour, ICarActionable
 
     public void SetForwardVelocity(float newVelocity)
     {
-        this.velocity = newVelocity;
+        this.velocity = Mathf.Abs(newVelocity);
+    }
+
+    public void SetForwardAcceleration(float newAcceleration)
+    {
+        this.acceleration = newAcceleration;
+    }
+
+    public void SetDirection(bool direction)
+    {
+        this.direction = direction;
     }
 }

@@ -1,13 +1,16 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Set the forward acceleration of the car.
+///     Relative to current velocity: negative will always brake, positive always speeds up
+/// </summary>
 public class SetAccelerationAction : MonoBehaviour, ICarFloatAction
 {
     private ICarActionable reciever;
 
     public void Execute(float acceleration)
     {
-        //TODO: allow for acceleration
-        throw new System.NotImplementedException();
+        this.reciever.SetForwardAcceleration(acceleration);
     }
 
     public void SetAcionReceiver(ICarActionable reciever)

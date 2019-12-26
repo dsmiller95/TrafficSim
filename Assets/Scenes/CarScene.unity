@@ -153,7 +153,8 @@ MonoBehaviour:
   spawnTarget: {fileID: 2345771687714094421, guid: e8362c35c93e12940807e078e1339d50,
     type: 3}
   navigableRouteIndexes: 0200000003000000
-  spawnSpeed: -5
+  spawnSpeed: 5
+  spawnDirection: 1
   avgSpawnInterval: 0.5
 --- !u!4 &226277972
 Transform:
@@ -471,6 +472,7 @@ MonoBehaviour:
     type: 3}
   navigableRouteIndexes: 0000000001000000
   spawnSpeed: 5
+  spawnDirection: 0
   avgSpawnInterval: 0.5
 --- !u!4 &1770030807
 Transform:
