@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 226277972}
   - component: {fileID: 226277971}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: Car Spawner 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -448,7 +448,7 @@ GameObject:
   - component: {fileID: 1770030807}
   - component: {fileID: 1770030806}
   m_Layer: 0
-  m_Name: GameObject (1)
+  m_Name: Car Spawner 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

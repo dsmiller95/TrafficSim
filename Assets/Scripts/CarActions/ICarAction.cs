@@ -8,5 +8,6 @@ public interface ICarAction
 
 public enum CarActionTypes
 {
-    SetVelocity
+    SetVelocity,
+    SetAcceleration
 }
