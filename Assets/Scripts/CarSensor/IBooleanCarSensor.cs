@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public interface IBooleanCarSensor
+public interface IBooleanCarSensor : ICarSensor
 {
     bool Sense();
 }

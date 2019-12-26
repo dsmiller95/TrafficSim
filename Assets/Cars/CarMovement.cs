@@ -1,42 +1,50 @@
 ﻿using Assets.Scripts;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Experimental.U2D;
 using UnityEngine.U2D;
 
-public class CarMovement : MonoBehaviour
+public class CarMovement : MonoBehaviour, ICarActionable
 {
-    public float velocity = 1;
-
     public GameObject farFront;
     public GameObject closeFront;
+    public GameObject actionSet;
 
     private SplineNavigator navigator;
+    private ICarBehavior carBehavior;
 
-    private IBooleanCarSensor farFrontSensor;
-    private IBooleanCarSensor closeFrontSensor;
+    private Dictionary<CarSensorTypes, ICarSensor> sensors;
+    private Dictionary<CarActionTypes, ICarAction> actions;
+
+    private float velocity = 0;
 
     // Start is called before the first frame update
     void Start()
     {
         this.navigator = this.GetComponent<SplineNavigator>();
-        this.farFrontSensor = this.farFront.GetComponent<ColliderSensor>();
-        this.closeFrontSensor = this.closeFront.GetComponent<ColliderSensor>();
+        this.carBehavior = this.GetComponent<ICarBehavior>();
+
+        var sensorsList = new List<ICarSensor>();
+        sensorsList.Add(this.farFront.GetComponent<ColliderSensor>());
+        sensorsList.Add(this.closeFront.GetComponent<ColliderSensor>());
+        this.sensors = sensorsList.ToDictionary(sense => sense.GetSensorType());
+
+        var actionList = new List<ICarAction>(this.actionSet.GetComponents<ICarAction>());
+        actionList.ForEach(act => act.SetAcionReceiver(this));
+        this.actions = actionList
+            .ToDictionary(act => act.GetActionType());
     }
 
     // Update is called once per frame
     void Update()
     {
-        var currentVel = this.velocity;
-        if (this.farFrontSensor.Sense())
+        if(this.velocity != 0)
         {
-            currentVel /= 2;
+            this.UpdatePosition(Time.deltaTime, this.velocity);
         }
-        if (!this.closeFrontSensor.Sense())
-        {
-            this.UpdatePosition(Time.deltaTime, currentVel);
-        }
+        this.carBehavior.ExecuteBehavior(this.sensors, this.actions);
     }
 
     private void UpdatePosition(float deltaT, float velocity)
@@ -50,5 +58,10 @@ public class CarMovement : MonoBehaviour
         //this.navigator.DrawGizmos();
         //Gizmos.color = Color.blue;
         //Gizmos.DrawCube(this.transform.position, new Vector3(0.5f, 0.5f, 0.5f));
+    }
+
+    public void SetForwardVelocity(float newVelocity)
+    {
+        this.velocity = newVelocity;
     }
 }

@@ -4,8 +4,14 @@ using System.Collections;
 public class ColliderSensor : MonoBehaviour, IBooleanCarSensor
 {
     public LayerMask colliderLayerMask;
+    public CarSensorTypes sensorType;
 
     private CapsuleCollider2D capsuleCollider;
+
+    public CarSensorTypes GetSensorType()
+    {
+        return this.sensorType;
+    }
 
     public bool Sense()
     {

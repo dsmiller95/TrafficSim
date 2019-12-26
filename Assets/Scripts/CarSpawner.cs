@@ -27,7 +27,7 @@ namespace Assets.Scripts
             var navigator = spawned.GetComponent<SplineNavigator>();
             navigator.spriteShape = targetRoad;
             navigator.navigableRouteIndex = this.navigableRouteIndexes[Random.Range(0, this.navigableRouteIndexes.Count)];
-            spawned.GetComponent<CarMovement>().velocity = this.spawnSpeed;
+            spawned.GetComponent<CarMovement>().SetForwardVelocity(this.spawnSpeed);
             var rigidbody = spawned.GetComponent<Rigidbody2D>();
             rigidbody.isKinematic = false;
         }
