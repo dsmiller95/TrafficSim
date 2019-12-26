@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 2053108922119615259}
   - component: {fileID: 1517511415163971627}
   - component: {fileID: 8028088371601934708}
+  - component: {fileID: 3250009173123247626}
   - component: {fileID: 5658553931917497828}
   - component: {fileID: 1672350673156975881}
   m_Layer: 0
@@ -132,6 +133,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spriteShape: {fileID: 0}
   navigableRouteIndex: 0
+--- !u!114 &3250009173123247626
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2345771687714094421}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0bb64ee0668968449249a3975f9470d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Delegates: []
 --- !u!70 &5658553931917497828
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
