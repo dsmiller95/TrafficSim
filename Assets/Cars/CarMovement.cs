@@ -55,7 +55,7 @@ public class CarMovement : MonoBehaviour, ICarActionable
     private void UpdatePosition(float deltaT, float velocity)
     {
         this.navigator.TranslateAcrossSpline(velocity * deltaT);
-        this.transform.Translate(0, 0, -1);
+        //this.transform.Translate(0, 0, -1);
     }
 
     public void OnDrawGizmos()

@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine.UIElements;
 
-public class ScriptableObjectContainer : VisualElement
+public class ScriptableObjectContainerController : MonoBehaviour
 {
 
     // Use this for initialization
