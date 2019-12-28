@@ -7,9 +7,8 @@ using System.Linq;
 
 public class DragDropLockable : EventTrigger
 {
-
-    protected bool canHaveChildren = true;
-    protected bool canHaveParents = true;
+    public bool canHaveChildren = true;
+    public bool canHaveParents = true;
 
     private static DragDropLockable CurrentDragging;
 
@@ -17,10 +16,10 @@ public class DragDropLockable : EventTrigger
     private bool dragging;
     private ISet<DragDropLockable> dragLinked = new HashSet<DragDropLockable>();
 
-    private DragDropLockable parent;
-    private DragDropLockable child;
+    public DragDropLockable parent;
+    public DragDropLockable child;
 
-    private RectTransform rectTransform
+    public RectTransform rectTransform
     {
         get => this.GetComponent<RectTransform>();
     }
@@ -71,7 +70,7 @@ public class DragDropLockable : EventTrigger
             return;
         }
 
-        if(CurrentDragging != null)
+        if(CurrentDragging != null && this.canHaveChildren)
         {
             this.DragabbleLinkEnter(CurrentDragging);
             CurrentDragging.dragLinked.Add(this);
@@ -84,7 +83,7 @@ public class DragDropLockable : EventTrigger
         {
             return;
         }
-        if (CurrentDragging != null)
+        if (CurrentDragging != null && this.canHaveChildren)
         {
             this.DraggableLinkExit(CurrentDragging);
             CurrentDragging.dragLinked.Remove(this);
@@ -96,7 +95,10 @@ public class DragDropLockable : EventTrigger
         dragging = true;
         this.transform.SetAsFirstSibling();
         this.baseImage.color = Color.blue;
-        CurrentDragging = this;
+        if (this.canHaveParents)
+        {
+            CurrentDragging = this;
+        }
     }
 
     public override void OnDrag(PointerEventData eventData)
@@ -107,7 +109,10 @@ public class DragDropLockable : EventTrigger
             this.parent = null;
         }
         this.transform.position += new Vector3(eventData.delta.x, eventData.delta.y);
-        this.child?.UpdatePositionRelativeToParent();
+        if (this.canHaveChildren)
+        {
+            this.child?.UpdatePositionRelativeToParent();
+        }
     }
 
     public override void OnEndDrag(PointerEventData eventData)
@@ -116,7 +121,7 @@ public class DragDropLockable : EventTrigger
         this.baseImage.color = Color.white;
         CurrentDragging = null;
         var target = this.dragLinked.FirstOrDefault();
-        if (target)
+        if (target && this.canHaveParents)
         {
             this.AttachToParent(target);
             target.DraggableChildLinked(this);
@@ -141,22 +146,30 @@ public class DragDropLockable : EventTrigger
 
     private void AttachToParent(DragDropLockable parent)
     {
-        if(parent == null)
+        if(parent == null || !this.canHaveParents)
         {
             return;
         }
-        this.parent = parent;
-        if (this.parent.child)
+        if (this.canHaveChildren)
         {
-            this.CascadeFloatingChild(this.parent.child);
+            this.parent = parent;
+            if (this.parent.child)
+            {
+                this.CascadeFloatingChild(this.parent.child);
+            }
+            this.parent.child = this;
+        } else
+        {
+            parent.CascadeFloatingChild(this);
         }
-        this.parent.child = this;
+
         this.UpdatePositionRelativeToParent();
     }
 
     /// <summary>
     /// After a drag completes on top of a Lockable with children, insert the new block of Lockables directly below the target
     ///     And cascade all previous children to the bottom of the chain
+    /// If this element can't have children, it will eject the floating child without a parent
     /// </summary>
     /// <param name="child">The child to be dropped to the bottom of the current list</param>
     private void CascadeFloatingChild(DragDropLockable child)
@@ -167,10 +180,30 @@ public class DragDropLockable : EventTrigger
         }
         else
         {
-            this.child = child;
-            this.child.parent = this;
-            this.child.UpdatePositionRelativeToParent();
+            if (this.canHaveChildren)
+            {
+                if (child.canHaveParents)
+                {
+                    this.child = child;
+                    this.child.parent = this;
+                    this.child.UpdatePositionRelativeToParent();
+                    return;
+                }
+            }
+            child.EjectFromPosition();
+            //If child cannot be placed, it is orphaned
+            child.parent = null;
         }
+    }
+
+    /// <summary>
+    /// this item has been severed from its chain due to a drag taking its place
+    ///     By default this will shift the element over by its width to offset and make it visible
+    /// </summary>
+    private void EjectFromPosition()
+    {
+        this.rectTransform.position = this.rectTransform.position + this.rectTransform.sizeDelta.x * Vector3.right;
+        this.child?.UpdatePositionRelativeToParent();
     }
 
     private Vector2 GetMousePosOnCanvas()

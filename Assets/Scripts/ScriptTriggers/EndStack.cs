@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace Assets.Scripts.ScriptTriggers
 {
-    class OnStartTrigger : DragDropLockable
+    class EndStack : DragDropLockable
     {
-        public OnStartTrigger()
+        public EndStack()
         {
-            this.canHaveParents = false;
+            this.canHaveChildren = false;
         }
     }
 }
