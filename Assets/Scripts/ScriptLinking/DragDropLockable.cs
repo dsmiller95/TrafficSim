@@ -5,7 +5,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
 
-public class DragDropLockable : EventTrigger
+public class DragDropLockable : EventTrigger, ILinkedScriptingObject
 {
     public bool canHaveChildren = true;
     public bool canHaveParents = true;
@@ -227,5 +227,15 @@ public class DragDropLockable : EventTrigger
     {
         var pos = Input.mousePosition;
         return new Vector2(pos.x, pos.y);
+    }
+
+    public ILinkedScriptingObject GetParent()
+    {
+        return this.parent;
+    }
+
+    public ILinkedScriptingObject GetChild()
+    {
+        return this.child;
     }
 }

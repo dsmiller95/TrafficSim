@@ -1,13 +1,15 @@
 ﻿using UnityEngine;
 
-public interface ICarAction
+public interface ICarAction : ILinkedScriptingObject
 {
-    void SetAcionReceiver(ICarActionable reciever);
     CarActionTypes GetActionType();
+
+    ILinkedScriptingObject Execute(ICarActionable target);
 }
 
 public enum CarActionTypes
 {
     SetVelocity,
-    SetAcceleration
+    Noop,
+    Start
 }

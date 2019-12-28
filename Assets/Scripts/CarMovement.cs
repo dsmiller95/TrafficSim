@@ -15,10 +15,12 @@ public class CarMovement : MonoBehaviour, ICarActionable
     public bool direction;
 
     private SplineNavigator navigator;
-    private ICarBehavior carBehavior;
+    private ICarBehavior carBehavior {
+        get => this.GetComponent<ICarBehavior>();
+    }
 
-    private Dictionary<CarSensorTypes, ICarSensor> sensors;
-    private Dictionary<CarActionTypes, ICarAction> actions;
+    //private Dictionary<CarSensorTypes, ICarSensor> sensors;
+    //private Dictionary<CarActionTypes, ICarAction> actions;
 
     private float velocity = 0;
     private float acceleration = 0;
@@ -27,17 +29,16 @@ public class CarMovement : MonoBehaviour, ICarActionable
     void Start()
     {
         this.navigator = this.GetComponent<SplineNavigator>();
-        this.carBehavior = this.GetComponent<ICarBehavior>();
 
-        var sensorsList = new List<ICarSensor>();
-        sensorsList.Add(this.farFront.GetComponent<ColliderSensor>());
-        sensorsList.Add(this.closeFront.GetComponent<ColliderSensor>());
-        this.sensors = sensorsList.ToDictionary(sense => sense.GetSensorType());
+        //var sensorsList = new List<ICarSensor>();
+        //sensorsList.Add(this.farFront.GetComponent<ColliderSensor>());
+        //sensorsList.Add(this.closeFront.GetComponent<ColliderSensor>());
+        //this.sensors = sensorsList.ToDictionary(sense => sense.GetSensorType());
 
-        var actionList = new List<ICarAction>(this.actionSet.GetComponents<ICarAction>());
-        actionList.ForEach(act => act.SetAcionReceiver(this));
-        this.actions = actionList
-            .ToDictionary(act => act.GetActionType());
+        //var actionList = new List<ICarAction>(this.actionSet.GetComponents<ICarAction>());
+        //actionList.ForEach(act => act.SetAcionReceiver(this));
+        //this.actions = actionList
+        //    .ToDictionary(act => act.GetActionType());
     }
 
     // Update is called once per frame
@@ -49,7 +50,7 @@ public class CarMovement : MonoBehaviour, ICarActionable
         {
             this.UpdatePosition(Time.deltaTime, this.velocity * (this.direction ? 1 : -1));
         }
-        this.carBehavior.ExecuteBehavior(this.sensors, this.actions);
+        this.carBehavior?.ExecuteBehavior(this);
     }
 
     private void UpdatePosition(float deltaT, float velocity)

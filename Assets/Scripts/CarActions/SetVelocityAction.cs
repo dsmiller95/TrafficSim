@@ -1,16 +1,12 @@
 ﻿using UnityEngine;
 
-public class SetVelocityAction : MonoBehaviour, ICarFloatAction
+public class SetVelocityAction : DragDropLockable, ICarFloatAction
 {
-    private ICarActionable reciever;
-
-    public void Execute(float acceleration)
+    public ILinkedScriptingObject Execute(ICarActionable target)
     {
-        this.reciever?.SetForwardVelocity(acceleration);
-    }
-    public void SetAcionReceiver(ICarActionable reciever)
-    {
-        this.reciever = reciever;
+        //TODO: grab velocity from linked sensor object
+        target.SetForwardVelocity(1);
+        return this.GetChild();
     }
 
     public CarActionTypes GetActionType()
