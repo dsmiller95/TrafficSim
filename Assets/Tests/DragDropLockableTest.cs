@@ -181,6 +181,39 @@ namespace Tests
             Assert.AreEqual(20, grandchild2.rectTransform.position.x);
         }
 
+        [Test]
+        public void WhenSingleNoChildTerminatorDraggedToParentShouldCascadeToBottom()
+        {
+            var noChildren1 = this.GetDraggable(name: "parent1");
+            noChildren1.canHaveChildren = false;
+            var parent2 = this.GetDraggable(name: "parent2");
+            var child2 = this.GetDraggable(name: "child2", parent: parent2);
+
+            noChildren1.OnBeginDrag(null);
+            parent2.OnPointerEnter(null);
+            noChildren1.OnEndDrag(null);
+
+            AssertChainOrder(parent2, child2, noChildren1);
+        }
+
+        [Test]
+        public void WhenSingleNoChildTerminatorDraggedToChainWithTerminatorShouldCascadeToBottomAndEjectOldTerminator()
+        {
+            var noChildren1 = this.GetDraggable(name: "noChildren1");
+            noChildren1.canHaveChildren = false;
+            var parent2 = this.GetDraggable(name: "parent2");
+            var child2 = this.GetDraggable(name: "child2", parent: parent2);
+            child2.canHaveChildren = false;
+
+            noChildren1.OnBeginDrag(null);
+            parent2.OnPointerEnter(null);
+            noChildren1.OnEndDrag(null);
+
+            AssertChainOrder(parent2, noChildren1);
+            Assert.AreEqual(null, child2.parent);
+            Assert.AreEqual(null, child2.child);
+        }
+
         private void AssertParentChild(DragDropLockable parent, DragDropLockable child)
         {
             Assert.AreEqual(child, parent.child);

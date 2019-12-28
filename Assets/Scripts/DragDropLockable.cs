@@ -160,39 +160,56 @@ public class DragDropLockable : EventTrigger
             this.parent.child = this;
         } else
         {
-            parent.CascadeFloatingChild(this);
+            //cascade to the bottom and kick out any existing terminators
+            parent.CascadeFloatingChild(this, true);
         }
 
-        this.UpdatePositionRelativeToParent();
+        if (this.parent)
+        {
+            this.UpdatePositionRelativeToParent();
+        }
     }
 
     /// <summary>
     /// After a drag completes on top of a Lockable with children, insert the new block of Lockables directly below the target
     ///     And cascade all previous children to the bottom of the chain
-    /// If this element can't have children, it will eject the floating child without a parent
+    /// If this element can't have children, by default it will eject the floating child without a parent
     /// </summary>
     /// <param name="child">The child to be dropped to the bottom of the current list</param>
-    private void CascadeFloatingChild(DragDropLockable child)
+    private void CascadeFloatingChild(DragDropLockable child, bool ejectSelfIfNoChildren = false)
     {
         if (this.child)
         {
-            this.child.CascadeFloatingChild(child);
+            this.child.CascadeFloatingChild(child, ejectSelfIfNoChildren);
         }
         else
         {
-            if (this.canHaveChildren)
+            if (child.canHaveParents)
             {
-                if (child.canHaveParents)
+                if (this.canHaveChildren)
                 {
                     this.child = child;
                     this.child.parent = this;
                     this.child.UpdatePositionRelativeToParent();
                     return;
                 }
+                else
+                {
+                    if (ejectSelfIfNoChildren)
+                    {
+                        // since the floating cannot be ejected, eject this element
+                        child.parent = this.parent;
+                        child.parent.child = child;
+
+                        this.parent = null;
+                        this.EjectFromPosition();
+                        return;
+                    }
+                }
             }
-            child.EjectFromPosition();
             //If child cannot be placed, it is orphaned
             child.parent = null;
+            child.EjectFromPosition();
         }
     }
 
