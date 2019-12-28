@@ -26,7 +26,7 @@ public class DragDropLockable : EventTrigger
     }
 
     // Use this for initialization
-    void Start()
+    public void Start()
     {
         this.baseImage = this.GetComponent<Image>();
     }
