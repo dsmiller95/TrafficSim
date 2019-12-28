@@ -7,17 +7,8 @@ using System.Linq;
 
 namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 {
-    public class DragDropSeries : EventTrigger
+    public class DragDropSeries : DragDropBase
     {
-        // A dragabble of any type could potentially be dragging at any point
-        private static DragDropSeries CurrentDragging;
-
-        private Image baseImage;
-        private bool dragging;
-        // A set of other dragabbles which this object is currently being dragged over
-        //  The linkable parameter could be of any type
-        private ISet<DragDropSeries> dragLinked = new HashSet<DragDropSeries>();
-
         // The DragDropSeries can only support IScriptableEntry, since it inherently links in a parent-child chain
         private IScriptableEntry myScript;
 
@@ -46,9 +37,9 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         }
 
         // Use this for initialization
-        public void Start()
+        public override void Start()
         {
-            this.baseImage = this.GetComponent<Image>();
+            base.Start();
             this.myScript = this.GetComponent<IScriptableEntry>();
             if (this.myScript == null || !this.myScript.GetCompatabilityWithDraggable(this))
             {
@@ -61,22 +52,67 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         {
         }
 
+        private bool IsCompatableChild(DragDropBase other)
+        {
+            // Only change color if a link is possible
+            var compatableSibling = other as DragDropSeries;
+            return this.myScript.GetCanHaveChildren()
+                   && compatableSibling != null
+                   && compatableSibling.myScript.GetCanHaveParents();
+        }
+
         /// <summary>
         /// This object has another Lockable hovering over it, ready to link when dropped
         /// </summary>
         /// <param name="other">the other Lockable which is about to link</param>
-        public virtual void DragabbleLinkEnter(DragDropSeries other)
+        public override void DragabbleLinkEnter(DragDropBase other)
         {
-            this.baseImage.color = Color.green;
+            // Only respond if a link was possible
+            if (this.IsCompatableChild(other))
+            {
+                base.DragabbleLinkEnter(other);
+            }
         }
 
         /// <summary>
         /// This object no longer has another DragDropLockable about to pair with it
         /// </summary>
         /// <param name="other">The other Lockable which was previously hovering to link</param>
-        public virtual void DraggableLinkExit(DragDropSeries other)
+        public override void DraggableLinkExit(DragDropBase other)
         {
-            this.baseImage.color = Color.white;
+            // Only respond if a link was possible
+            if (this.IsCompatableChild(other))
+            {
+                base.DraggableLinkExit(other);
+            }
+        }
+
+        public override void OnDragStart()
+        {
+            base.OnDragStart();
+            if (this.parent != null)
+            {
+                this.parent.nextExecutingChild = null;
+                this.parent = null;
+            }
+        }
+
+        public override void OnDragging()
+        {
+            base.OnDragging();
+            if (this.myScript.GetCanHaveChildren())
+            {
+                this.nextExecutingChild?.UpdatePositionRelativeToParent();
+            }
+        }
+
+        public override void DraggableDroppedOnto(DragDropBase other)
+        {
+            if (this.IsCompatableChild(other))
+            {
+                var compatableOther = other as DragDropSeries;
+                compatableOther.AttachToParent(this);
+            }
         }
 
         /// <summary>
@@ -97,70 +133,6 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             this.myScript.SetNextExecutingChild(null);
         }
 
-        public override void OnPointerEnter(PointerEventData eventData)
-        {
-            if (this.dragging)
-            {
-                return;
-            }
-
-            if (CurrentDragging != null && this.myScript.GetCanHaveChildren())
-            {
-                this.DragabbleLinkEnter(CurrentDragging);
-                CurrentDragging.dragLinked.Add(this);
-            }
-        }
-
-        public override void OnPointerExit(PointerEventData eventData)
-        {
-            if (this.dragging)
-            {
-                return;
-            }
-            if (CurrentDragging != null && this.myScript.GetCanHaveChildren())
-            {
-                this.DraggableLinkExit(CurrentDragging);
-                CurrentDragging.dragLinked.Remove(this);
-            }
-        }
-
-        public override void OnBeginDrag(PointerEventData eventData)
-        {
-            dragging = true;
-            this.transform.SetAsFirstSibling();
-            this.baseImage.color = Color.blue;
-            if (this.myScript.GetCanHaveParents())
-            {
-                CurrentDragging = this;
-            }
-        }
-
-        public override void OnDrag(PointerEventData eventData)
-        {
-            if (this.parent != null)
-            {
-                this.parent.nextExecutingChild = null;
-                this.parent = null;
-            }
-            this.transform.position += new Vector3(eventData.delta.x, eventData.delta.y);
-            if (this.myScript.GetCanHaveChildren())
-            {
-                this.nextExecutingChild?.UpdatePositionRelativeToParent();
-            }
-        }
-
-        public override void OnEndDrag(PointerEventData eventData)
-        {
-            dragging = false;
-            this.baseImage.color = Color.white;
-            CurrentDragging = null;
-            var target = this.dragLinked.FirstOrDefault();
-            if (target && this.myScript.GetCanHaveParents())
-            {
-                this.AttachToParent(target);
-            }
-            this.dragLinked.Clear();
-        }
 
         /// <summary>
         /// Return a transform to apply to a child relative to this object when linking
