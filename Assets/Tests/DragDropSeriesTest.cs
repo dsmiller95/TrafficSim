@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Assets.Scripts.ScriptableBuilder.ScriptLinking;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -7,14 +8,51 @@ using UnityEngine.UI;
 
 namespace Tests
 {
-    public class DragDropLockableTest
+    public class TestDraggableBehavior : ScriptableEntry
     {
-        private DragDropLockable GetDraggable(float positionX = 0, float positionY = 0, float width = 0, float height = 0, string name = "draggable", DragDropLockable parent = null)
+        public bool canChild, canParent;
+
+        public override IScriptableEntry Execute(ICarActionable reciever)
+        {
+            return null;
+        }
+
+        public override bool GetCanHaveChildren()
+        {
+            return this.canChild;
+        }
+
+        public override bool GetCanHaveParents()
+        {
+            return this.canParent;
+        }
+
+        public override bool GetCompatabilityWithDraggable(DragDropSeries draggable)
+        {
+            return true;
+        }
+    }
+
+    public class DragDropSeriesTest
+    {
+        private DragDropSeries GetDraggable(
+            float positionX = 0,
+            float positionY = 0,
+            float width = 0,
+            float height = 0,
+            string name = "draggable",
+            DragDropSeries parent = null,
+            bool canHaveChildren = true,
+            bool canHaveParents = true)
         {
             var gameObject = new GameObject(name, new System.Type[] { typeof(RectTransform) });
-            var dragger = gameObject.AddComponent<DragDropLockable>();
+            var dragger = gameObject.AddComponent<DragDropSeries>();
             gameObject.AddComponent<Image>();
             dragger.transform.position = new Vector3(positionX, positionY, 0);
+            var testBehavior = gameObject.AddComponent<TestDraggableBehavior>();
+            testBehavior.canChild = canHaveChildren;
+            testBehavior.canParent = canHaveParents;
+
             dragger.Start();
 
             var rectTransform = gameObject.GetComponent<RectTransform>();
@@ -23,7 +61,7 @@ namespace Tests
             if (parent)
             {
                 dragger.parent = parent;
-                parent.child = dragger;
+                parent.nextExecutingChild = dragger;
             }
 
             return dragger;
@@ -71,7 +109,7 @@ namespace Tests
             Assert.AreEqual(3, child.transform.position.x);
             Assert.AreEqual(-2, child.transform.position.y);
             Assert.AreEqual(parent, child.parent);
-            Assert.AreEqual(child, parent.child);
+            Assert.AreEqual(child, parent.nextExecutingChild);
 
 
             // Use the Assert class to test conditions
@@ -124,8 +162,7 @@ namespace Tests
         public void WhenDoubleLinkedWithNoChildTerminatorDraggedOntoDoubleShouldCorrectlyOrderChain()
         {
             var parent1 = this.GetDraggable(name: "parent1");
-            var child1 = this.GetDraggable(name: "child1", parent: parent1);
-            child1.canHaveChildren = false;
+            var child1 = this.GetDraggable(name: "child1", parent: parent1, canHaveChildren: false);
             var parent2 = this.GetDraggable(name: "parent2");
             var child2 = this.GetDraggable(0, 0, 20, 10, name: "child2", parent: parent2);
 
@@ -135,7 +172,7 @@ namespace Tests
 
             AssertChainOrder(parent2, parent1, child1);
             Assert.AreEqual(child2.parent, null);
-            Assert.AreEqual(child2.child, null);
+            Assert.AreEqual(child2.nextExecutingChild, null);
             Assert.AreEqual(20f, child2.rectTransform.position.x);
         }
 
@@ -143,11 +180,9 @@ namespace Tests
         public void WhenDoubleLinkedWithNoChildTerminatorDraggedOntoDoubleWithNoChildTerminatorShouldOrphanTerminator()
         {
             var parent1 = this.GetDraggable(name: "parent1");
-            var child1 = this.GetDraggable(name: "child1", parent: parent1);
-            child1.canHaveChildren = false;
+            var child1 = this.GetDraggable(name: "child1", parent: parent1, canHaveChildren: false);
             var parent2 = this.GetDraggable(name: "parent2");
-            var child2 = this.GetDraggable(0, 0, 20, 10, name: "child2", parent: parent2);
-            child2.canHaveChildren = false;
+            var child2 = this.GetDraggable(0, 0, 20, 10, name: "child2", parent: parent2, canHaveChildren: false);
 
             parent1.OnBeginDrag(null);
             parent2.OnPointerEnter(null);
@@ -155,7 +190,7 @@ namespace Tests
 
             AssertChainOrder(parent2, parent1, child1);
             Assert.AreEqual(null, child2.parent);
-            Assert.AreEqual(null, child2.child);
+            Assert.AreEqual(null, child2.nextExecutingChild);
             Assert.AreEqual(20, child2.rectTransform.position.x);
         }
 
@@ -164,12 +199,10 @@ namespace Tests
         {
             var parent1 = this.GetDraggable(name: "parent1");
             var child1 = this.GetDraggable(name: "child1", parent: parent1);
-            var grandchild1 = this.GetDraggable(name: "grandchild1", parent: child1);
-            grandchild1.canHaveChildren = false;
+            var grandchild1 = this.GetDraggable(name: "grandchild1", parent: child1, canHaveChildren: false);
             var parent2 = this.GetDraggable(name: "parent2");
             var child2 = this.GetDraggable(0, 0, 20, 10, name: "child2", parent: parent2);
-            var grandchild2 = this.GetDraggable(name: "grandchild2", parent: child2);
-            grandchild2.canHaveChildren = false;
+            var grandchild2 = this.GetDraggable(name: "grandchild2", parent: child2, canHaveChildren: false);
 
             parent1.OnBeginDrag(null);
             parent2.OnPointerEnter(null);
@@ -184,8 +217,7 @@ namespace Tests
         [Test]
         public void WhenSingleNoChildTerminatorDraggedToParentShouldCascadeToBottom()
         {
-            var noChildren1 = this.GetDraggable(name: "parent1");
-            noChildren1.canHaveChildren = false;
+            var noChildren1 = this.GetDraggable(name: "parent1", canHaveChildren: false);
             var parent2 = this.GetDraggable(name: "parent2");
             var child2 = this.GetDraggable(name: "child2", parent: parent2);
 
@@ -199,11 +231,9 @@ namespace Tests
         [Test]
         public void WhenSingleNoChildTerminatorDraggedToChainWithTerminatorShouldCascadeToBottomAndEjectOldTerminator()
         {
-            var noChildren1 = this.GetDraggable(name: "noChildren1");
-            noChildren1.canHaveChildren = false;
+            var noChildren1 = this.GetDraggable(name: "noChildren1", canHaveChildren: false);
             var parent2 = this.GetDraggable(name: "parent2");
-            var child2 = this.GetDraggable(name: "child2", parent: parent2);
-            child2.canHaveChildren = false;
+            var child2 = this.GetDraggable(name: "child2", parent: parent2, canHaveChildren: false);
 
             noChildren1.OnBeginDrag(null);
             parent2.OnPointerEnter(null);
@@ -211,12 +241,12 @@ namespace Tests
 
             AssertChainOrder(parent2, noChildren1);
             Assert.AreEqual(null, child2.parent);
-            Assert.AreEqual(null, child2.child);
+            Assert.AreEqual(null, child2.nextExecutingChild);
         }
 
-        private void AssertParentChild(DragDropLockable parent, DragDropLockable child)
+        private void AssertParentChild(DragDropSeries parent, DragDropSeries child)
         {
-            Assert.AreEqual(child, parent.child);
+            Assert.AreEqual(child, parent.nextExecutingChild);
             Assert.AreEqual(parent, child.parent);
         }
 
@@ -224,13 +254,13 @@ namespace Tests
         /// Expects to be in parent towards child order
         /// </summary>
         /// <param name="chain"></param>
-        private void AssertChainOrder(params DragDropLockable[] chain) {
+        private void AssertChainOrder(params DragDropSeries[] chain) {
             Assert.AreEqual(null, chain[0].parent);
             for(var i = 0; i < chain.Length - 1; i++)
             {
                 AssertParentChild(chain[i], chain[i + 1]);
             }
-            Assert.AreEqual(null, chain[chain.Length - 1].child);
+            Assert.AreEqual(null, chain[chain.Length - 1].nextExecutingChild);
         }
 
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
