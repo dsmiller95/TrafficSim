@@ -12,6 +12,7 @@ namespace Tests
         [Test]
         public void TestSimplePasses()
         {
+            var lockable = new DragDropLockable();
             // Use the Assert class to test conditions
         }
 

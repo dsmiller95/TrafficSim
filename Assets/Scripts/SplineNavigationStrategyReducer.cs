@@ -8,8 +8,6 @@ using UnityEngine;
 using Unity.Collections;
 using UnityEditor;
 using System.Geometry;
-//using System.Numerics;
-
 namespace Assets.Scripts
 {
     class SplineNavigationStrategyReducer : ISplineNavigationStrategy
