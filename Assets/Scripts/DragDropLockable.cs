@@ -7,7 +7,11 @@ using System.Linq;
 
 public class DragDropLockable : EventTrigger
 {
-    public static DragDropLockable CurrentDragging;
+
+    protected bool canHaveChildren = true;
+    protected bool canHaveParents = true;
+
+    private static DragDropLockable CurrentDragging;
 
     private Image baseImage;
     private bool dragging;
@@ -32,6 +36,34 @@ public class DragDropLockable : EventTrigger
     {
     }
 
+    /// <summary>
+    /// This object has another Lockable hovering over it, ready to link when dropped
+    /// </summary>
+    /// <param name="other">the other Lockable which is about to link</param>
+    public virtual void DragabbleLinkEnter(DragDropLockable other)
+    {
+        this.baseImage.color = Color.green;
+    }
+
+    /// <summary>
+    /// This object no longer has another DragDropLockable about to pair with it
+    /// </summary>
+    /// <param name="other">The other Lockable which was previously hovering to link</param>
+    public virtual void DraggableLinkExit(DragDropLockable other)
+    {
+        this.baseImage.color = Color.white;
+    }
+
+    /// <summary>
+    /// This object no longer has another DragDropLockable about to pair with it
+    ///     this happens either because the 
+    /// </summary>
+    /// <param name="child">The child which has been linked to this object</param>
+    public virtual void DraggableChildLinked(DragDropLockable child)
+    {
+        this.baseImage.color = Color.white;
+    }
+
     public override void OnPointerEnter(PointerEventData eventData)
     {
         if (this.dragging)
@@ -39,9 +71,9 @@ public class DragDropLockable : EventTrigger
             return;
         }
 
-        this.baseImage.color = Color.green;
         if(CurrentDragging != null)
         {
+            this.DragabbleLinkEnter(CurrentDragging);
             CurrentDragging.dragLinked.Add(this);
         }
     }
@@ -52,9 +84,9 @@ public class DragDropLockable : EventTrigger
         {
             return;
         }
-        this.baseImage.color = Color.white;
         if (CurrentDragging != null)
         {
+            this.DraggableLinkExit(CurrentDragging);
             CurrentDragging.dragLinked.Remove(this);
         }
     }
@@ -83,7 +115,12 @@ public class DragDropLockable : EventTrigger
         dragging = false;
         this.baseImage.color = Color.white;
         CurrentDragging = null;
-        this.AttachToParent(this.dragLinked.FirstOrDefault());
+        var target = this.dragLinked.FirstOrDefault();
+        if (target)
+        {
+            this.AttachToParent(target);
+            target.DraggableChildLinked(this);
+        }
         this.dragLinked.Clear();
     }
 
