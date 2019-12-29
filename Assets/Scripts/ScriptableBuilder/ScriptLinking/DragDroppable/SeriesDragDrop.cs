@@ -7,14 +7,14 @@ using System.Linq;
 
 namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 {
-    public class DragDropSeries : DragDropBase
+    public class SeriesDragDrop : BaseDragDrop
     {
         // The DragDropSeries can only support IScriptableEntry, since it inherently links in a parent-child chain
-        protected IScriptableEntry myScript;
+        public IScriptableEntry myScript;
 
-        public DragDropSeries parent;
-        private DragDropSeries _child;
-        public DragDropSeries nextExecutingChild {
+        public SeriesDragDrop parent;
+        private SeriesDragDrop _child;
+        public SeriesDragDrop nextExecutingChild {
             get {
                 return _child;
             }
@@ -52,10 +52,10 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         {
         }
 
-        private bool IsCompatableChild(DragDropBase other)
+        private bool IsCompatableChild(BaseDragDrop other)
         {
             // Only change color if a link is possible
-            var compatableSibling = other as DragDropSeries;
+            var compatableSibling = other as SeriesDragDrop;
             return this.myScript.GetCanHaveChildren()
                    && compatableSibling != null
                    && compatableSibling.myScript.GetCanHaveParents();
@@ -65,7 +65,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         /// This object has another Lockable hovering over it, ready to link when dropped
         /// </summary>
         /// <param name="other">the other Lockable which is about to link</param>
-        public override void DragabbleLinkEnter(DragDropBase other)
+        public override void DragabbleLinkEnter(BaseDragDrop other)
         {
             // Only respond if a link was possible
             if (this.IsCompatableChild(other))
@@ -78,7 +78,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         /// This object no longer has another DragDropLockable about to pair with it
         /// </summary>
         /// <param name="other">The other Lockable which was previously hovering to link</param>
-        public override void DraggableLinkExit(DragDropBase other)
+        public override void DraggableLinkExit(BaseDragDrop other)
         {
             // Only respond if a link was possible
             if (this.IsCompatableChild(other))
@@ -102,16 +102,17 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             base.OnDragging(data);
             if (this.myScript.GetCanHaveChildren())
             {
-                this.nextExecutingChild?.UpdatePositionRelativeToParent();
+                this.nextExecutingChild?.UpdatePositionRelativeToParent(this.GetChildTransform());
             }
         }
 
-        public override void DraggableDroppedOnto(DragDropBase other)
+        public override void DraggableDroppedOnto(BaseDragDrop other)
         {
             if (this.IsCompatableChild(other))
             {
-                var compatableOther = other as DragDropSeries;
-                compatableOther.AttachToParent(this);
+                var compatableOther = other as SeriesDragDrop;
+                this.AttachChild(compatableOther);
+                //compatableOther.AttachToParent(this);
             }
         }
 
@@ -119,7 +120,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         /// Called whenever the child of this dragabble is set to anything not null
         /// </summary>
         /// <param name="child">The child which has been linked to this object</param>
-        public virtual void DraggableChildLinked(DragDropSeries child)
+        public virtual void DraggableChildLinked(SeriesDragDrop child)
         {
             this.baseImage.color = Color.white;
             this.myScript.SetNextExecutingChild(child.myScript);
@@ -138,42 +139,42 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         /// Return a transform to apply to a child relative to this object when linking
         /// </summary>
         /// <returns></returns>
-        private Vector3 GetChildTransform()
+        protected virtual Vector3 GetChildTransform()
         {
             return Vector3.down * this.rectTransform.sizeDelta.y;
         }
 
-        private void UpdatePositionRelativeToParent()
+        public void UpdatePositionRelativeToParent(Vector3 childTransform)
         {
-            this.transform.position = parent.transform.position + parent.GetChildTransform();
+            this.transform.position = parent.transform.position + childTransform;
             this.OnPositionChanged();
-            this.nextExecutingChild?.UpdatePositionRelativeToParent();
+            this.nextExecutingChild?.UpdatePositionRelativeToParent(this.GetChildTransform());
         }
 
-        private void AttachToParent(DragDropSeries parent)
+        private void AttachChild(SeriesDragDrop child)
         {
-            if (parent == null || !this.myScript.GetCanHaveParents())
+            if (child == null || !child.myScript.GetCanHaveParents())
             {
                 return;
             }
-            if (this.myScript.GetCanHaveChildren())
+            if (child.myScript.GetCanHaveChildren())
             {
-                this.parent = parent;
-                if (this.parent.nextExecutingChild)
+                child.parent = this;
+                if (this.nextExecutingChild)
                 {
-                    this.CascadeFloatingChild(this.parent.nextExecutingChild);
+                    child.CascadeFloatingChild(this.nextExecutingChild);
                 }
-                this.parent.nextExecutingChild = this;
+                this.nextExecutingChild = child;
             }
             else
             {
                 //cascade to the bottom and kick out any existing terminators
-                parent.CascadeFloatingChild(this, true);
+                this.CascadeFloatingChild(child, true);
             }
 
-            if (this.parent)
+            if (this.nextExecutingChild)
             {
-                this.UpdatePositionRelativeToParent();
+                this.nextExecutingChild.UpdatePositionRelativeToParent(this.GetChildTransform());
             }
         }
 
@@ -183,7 +184,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         /// If this element can't have children, by default it will eject the floating child without a parent
         /// </summary>
         /// <param name="child">The child to be dropped to the bottom of the current list</param>
-        private void CascadeFloatingChild(DragDropSeries child, bool ejectSelfIfNoChildren = false)
+        public void CascadeFloatingChild(SeriesDragDrop child, bool ejectSelfIfNoChildren = false)
         {
             if (this.nextExecutingChild)
             {
@@ -197,7 +198,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                     {
                         this.nextExecutingChild = child;
                         this.nextExecutingChild.parent = this;
-                        this.nextExecutingChild.UpdatePositionRelativeToParent();
+                        this.nextExecutingChild.UpdatePositionRelativeToParent(this.GetChildTransform());
                         return;
                     }
                     else
@@ -227,7 +228,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         private void EjectFromPosition()
         {
             this.rectTransform.position = this.rectTransform.position + this.rectTransform.sizeDelta.x * Vector3.right;
-            this.nextExecutingChild?.UpdatePositionRelativeToParent();
+            this.nextExecutingChild?.UpdatePositionRelativeToParent(this.GetChildTransform());
         }
 
         private Vector2 GetMousePosOnCanvas()

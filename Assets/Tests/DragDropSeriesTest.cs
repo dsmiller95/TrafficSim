@@ -27,7 +27,7 @@ namespace Tests
             return this.canParent;
         }
 
-        public override bool GetCompatabilityWithDraggable(DragDropBase draggable)
+        public override bool GetCompatabilityWithDraggable(BaseDragDrop draggable)
         {
             return true;
         }
@@ -35,18 +35,18 @@ namespace Tests
 
     public class DragDropSeriesTest
     {
-        private DragDropSeries GetDraggable(
+        private SeriesDragDrop GetDraggable(
             float positionX = 0,
             float positionY = 0,
             float width = 0,
             float height = 0,
             string name = "draggable",
-            DragDropSeries parent = null,
+            SeriesDragDrop parent = null,
             bool canHaveChildren = true,
             bool canHaveParents = true)
         {
             var gameObject = new GameObject(name, new System.Type[] { typeof(RectTransform) });
-            var dragger = gameObject.AddComponent<DragDropSeries>();
+            var dragger = gameObject.AddComponent<SeriesDragDrop>();
             gameObject.AddComponent<Image>();
             dragger.transform.position = new Vector3(positionX, positionY, 0);
             var testBehavior = gameObject.AddComponent<TestDraggableBehavior>();
@@ -244,7 +244,7 @@ namespace Tests
             Assert.AreEqual(null, child2.nextExecutingChild);
         }
 
-        private void AssertParentChild(DragDropSeries parent, DragDropSeries child)
+        private void AssertParentChild(SeriesDragDrop parent, SeriesDragDrop child)
         {
             Assert.AreEqual(child, parent.nextExecutingChild);
             Assert.AreEqual(parent, child.parent);
@@ -254,7 +254,7 @@ namespace Tests
         /// Expects to be in parent towards child order
         /// </summary>
         /// <param name="chain"></param>
-        private void AssertChainOrder(params DragDropSeries[] chain) {
+        private void AssertChainOrder(params SeriesDragDrop[] chain) {
             Assert.AreEqual(null, chain[0].parent);
             for(var i = 0; i < chain.Length - 1; i++)
             {

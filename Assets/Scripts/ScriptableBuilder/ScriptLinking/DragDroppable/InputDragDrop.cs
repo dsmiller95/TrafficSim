@@ -13,19 +13,19 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
     /// An element which in addition to forming a chain, can also accept input elements.
     /// EX: accelerate, setVelocity
     /// </summary>
-    public class DragDropInput : DragDropSeries
+    public class InputDragDrop : SeriesDragDrop
     {
         private class InputSlot
         {
             public Type acceptedType;
-            public DragDropInputElement linkedElement;
+            public InputElementDragDrop linkedElement;
             public InputDropSlot slotObj;
             public InputSlot(InputDropSlot slotObj)
             {
                 this.slotObj = slotObj;
                 this.acceptedType = slotObj.acceptedType;
             }
-            public bool AttemptToFitElement(DragDropInputElement element, Vector2 mousePos)
+            public bool AttemptToFitElement(InputElementDragDrop element, Vector2 mousePos)
             {
                 if (element.outputType == this.acceptedType
                     && this.slotObj.rectTransform.rect.Contains(this.slotObj.rectTransform.InverseTransformPoint(mousePos)))
@@ -65,10 +65,9 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             }
         }
 
-        public override void DraggableDroppedOnto(DragDropBase other)
+        public override void DraggableDroppedOnto(BaseDragDrop other)
         {
-            Debug.Log($"Draggable {other.name} dropped onto {this.name}");
-            var inputElement = other as DragDropInputElement;
+            var inputElement = other as InputElementDragDrop;
             if (inputElement == null)
             {
                 base.DraggableDroppedOnto(other);
@@ -85,8 +84,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             }
 
             (this.myScript as IScriptableEntryWithInputs).SetInputElements(this.inputSlots
-                .Where(slot => slot.linkedElement)
-                .Select(slot => slot.linkedElement.myScript)
+                .Select(slot => slot.linkedElement?.myScript)
                 .ToList());
         }
 

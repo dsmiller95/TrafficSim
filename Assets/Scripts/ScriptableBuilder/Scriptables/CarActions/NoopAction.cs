@@ -14,9 +14,9 @@ namespace Assets.Scripts.ScriptableBuilder.SeriesScriptable.CarActions
             return this.child;
         }
 
-        public override bool GetCompatabilityWithDraggable(DragDropBase draggable)
+        public override bool GetCompatabilityWithDraggable(BaseDragDrop draggable)
         {
-            if(draggable is DragDropSeries)
+            if(draggable is SeriesDragDrop)
             {
                 return true;
             }

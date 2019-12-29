@@ -15,9 +15,9 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptTriggers
             return null;
         }
 
-        public override bool GetCompatabilityWithDraggable(DragDropBase draggable)
+        public override bool GetCompatabilityWithDraggable(BaseDragDrop draggable)
         {
-            if (draggable is DragDropSeries)
+            if (draggable is SeriesDragDrop)
             {
                 return true;
             }

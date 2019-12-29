@@ -11,9 +11,9 @@ namespace Assets.Scripts.ScriptableBuilder.SeriesScriptables.CarSensors
     public class GenericCarSensor<T> : ScriptableInput<T>
     {
         public CarSensorTypes sensorType;
-        public override bool GetCompatabilityWithDraggable(DragDropBase draggable)
+        public override bool GetCompatabilityWithDraggable(BaseDragDrop draggable)
         {
-            return draggable is DragDropInputElement;
+            return draggable is InputElementDragDrop;
         }
 
         public override T Sense(ICarSensable target)

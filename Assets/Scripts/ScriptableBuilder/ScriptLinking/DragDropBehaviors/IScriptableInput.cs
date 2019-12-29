@@ -22,16 +22,4 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
     {
         T Sense(ICarSensable target);
     }
-
-    public abstract class ScriptableInput<T> : MonoBehaviour, IScriptableInput<T>
-    {
-        public abstract bool GetCompatabilityWithDraggable(DragDropBase draggable);
-
-        public abstract T Sense(ICarSensable target);
-
-        public Type GetOutputType()
-        {
-            return typeof(T);
-        }
-    }
 }

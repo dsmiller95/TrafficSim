@@ -7,17 +7,17 @@ using System.Linq;
 
 namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 {
-    public class DragDropBase : EventTrigger
+    public class BaseDragDrop : EventTrigger
     {
         // A dragabble of any type could potentially be dragging at any point
-        protected static DragDropBase CurrentDragging;
+        protected static BaseDragDrop CurrentDragging;
 
         protected Image baseImage;
         private bool dragging;
 
         // A set of other dragabbles which this object is currently being dragged over
         //  The linkable parameter could be of any type
-        private ISet<DragDropBase> dragLinked = new HashSet<DragDropBase>();
+        private ISet<BaseDragDrop> dragLinked = new HashSet<BaseDragDrop>();
 
         public RectTransform rectTransform
         {
@@ -39,7 +39,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         /// This object has another Lockable hovering over it, ready to link when dropped
         /// </summary>
         /// <param name="other">the other Lockable which is about to link</param>
-        public virtual void DragabbleLinkEnter(DragDropBase other)
+        public virtual void DragabbleLinkEnter(BaseDragDrop other)
         {
             this.baseImage.color = Color.green;
         }
@@ -48,7 +48,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         /// This object no longer has another DragDropLockable about to pair with it
         /// </summary>
         /// <param name="other">The other Lockable which was previously hovering to link</param>
-        public virtual void DraggableLinkExit(DragDropBase other)
+        public virtual void DraggableLinkExit(BaseDragDrop other)
         {
             this.baseImage.color = Color.white;
         }
@@ -57,7 +57,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         /// This draggable has had another dragabble dropped on top of it
         /// </summary>
         /// <param name="other">the draggable which was dropped</param>
-        public virtual void DraggableDroppedOnto(DragDropBase other)
+        public virtual void DraggableDroppedOnto(BaseDragDrop other)
         {
         }
 
@@ -79,7 +79,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 
         /// <summary>
         /// Called whenever the current object was dragging, but no longer is
-        /// Always called before <see cref="DraggableDroppedOnto(DragDropBase)"/> if on top of other draggable
+        /// Always called before <see cref="DraggableDroppedOnto(BaseDragDrop)"/> if on top of other draggable
         /// </summary>
         public virtual void OnDragEnd()
         {

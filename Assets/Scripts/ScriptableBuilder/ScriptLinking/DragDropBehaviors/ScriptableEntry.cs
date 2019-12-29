@@ -20,7 +20,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         }
         public abstract IScriptableEntry Execute(ICarActionable reciever);
 
-        public abstract bool GetCompatabilityWithDraggable(DragDropBase draggable);
+        public abstract bool GetCompatabilityWithDraggable(BaseDragDrop draggable);
         public abstract bool GetCanHaveChildren();
         public abstract bool GetCanHaveParents();
     }

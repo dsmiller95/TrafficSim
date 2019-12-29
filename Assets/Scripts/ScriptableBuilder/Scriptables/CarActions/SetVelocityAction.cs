@@ -44,9 +44,9 @@ namespace Assets.Scripts.ScriptableBuilder.SeriesScriptable.CarActions
             return true;
         }
 
-        public override bool GetCompatabilityWithDraggable(DragDropBase draggable)
+        public override bool GetCompatabilityWithDraggable(BaseDragDrop draggable)
         {
-            return draggable is DragDropInput;
+            return draggable is InputDragDrop;
         }
 
         public bool ValidateInputs(IEnumerable<Type> inputs)

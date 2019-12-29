@@ -24,9 +24,9 @@ namespace Assets.Scripts.ScriptableBuilder.SeriesScriptable.CarActions
             return CarActionTypes.SetAcceleration;
         }
 
-        public override bool GetCompatabilityWithDraggable(DragDropBase draggable)
+        public override bool GetCompatabilityWithDraggable(BaseDragDrop draggable)
         {
-            return draggable is DragDropSeries;
+            return draggable is SeriesDragDrop;
         }
 
         public override bool GetCanHaveChildren()

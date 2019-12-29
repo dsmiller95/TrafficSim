@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 {
     /// <summary>
-    /// Defines any type which can be paired with a <see cref="DragDropSeries"/>
+    /// Defines any type which can be paired with a <see cref="SeriesDragDrop"/>
     ///     And any methods needed to setup or establish a linking between the two
     /// </summary>
     public interface IDragDropBehavior
     {
-        bool GetCompatabilityWithDraggable(DragDropBase draggable);
+        bool GetCompatabilityWithDraggable(BaseDragDrop draggable);
     }
 }

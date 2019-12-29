@@ -12,7 +12,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
     /// Class to model items like sensors and variables
     ///     will allow for self to be dragged into "slots", but cannot enter into a Series chain
     /// </summary>
-    public class DragDropInputElement : DragDropBase
+    public class InputElementDragDrop : BaseDragDrop
     {
         public IScriptableInput myScript;
         public Type outputType
