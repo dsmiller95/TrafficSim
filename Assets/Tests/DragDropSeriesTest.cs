@@ -195,7 +195,7 @@ namespace Tests
         }
 
         [Test]
-        public void WhenTripleLinkedWithNoChildTerminatorDraggedOntoTriplWithNoChildTerminatorShouldOrphanStaticChainChildren()
+        public void WhenTripleLinkedWithNoChildTerminatorDraggedOntoTripleWithNoChildTerminatorShouldOrphanStaticChainChildren()
         {
             var parent1 = this.GetDraggable(name: "parent1");
             var child1 = this.GetDraggable(name: "child1", parent: parent1);
@@ -215,7 +215,7 @@ namespace Tests
         }
 
         [Test]
-        public void WhenSingleNoChildTerminatorDraggedToParentShouldCascadeToBottom()
+        public void WhenSingleNoChildTerminatorDraggedToParentShouldEjectAllPreviousChildren()
         {
             var noChildren1 = this.GetDraggable(name: "parent1", canHaveChildren: false);
             var parent2 = this.GetDraggable(name: "parent2");
@@ -225,23 +225,25 @@ namespace Tests
             parent2.OnPointerEnter(null);
             noChildren1.OnEndDrag(null);
 
-            AssertChainOrder(parent2, child2, noChildren1);
+            AssertChainOrder(parent2, noChildren1);
+            Assert.AreEqual(null, child2.parent);
+            Assert.AreEqual(null, child2.nextExecutingChild);
         }
 
         [Test]
-        public void WhenSingleNoChildTerminatorDraggedToChainWithTerminatorShouldCascadeToBottomAndEjectOldTerminator()
+        public void WhenSingleNoChildTerminatorDraggedToChainWithTerminatorShouldEjectAllPreviousChildren()
         {
             var noChildren1 = this.GetDraggable(name: "noChildren1", canHaveChildren: false);
             var parent2 = this.GetDraggable(name: "parent2");
-            var child2 = this.GetDraggable(name: "child2", parent: parent2, canHaveChildren: false);
+            var child2 = this.GetDraggable(name: "child2", parent: parent2);
+            var grandchild2 = this.GetDraggable(name: "grandchild2", parent: child2, canHaveChildren: false);
 
             noChildren1.OnBeginDrag(null);
             parent2.OnPointerEnter(null);
             noChildren1.OnEndDrag(null);
 
             AssertChainOrder(parent2, noChildren1);
-            Assert.AreEqual(null, child2.parent);
-            Assert.AreEqual(null, child2.nextExecutingChild);
+            AssertChainOrder(child2, grandchild2);
         }
 
         private void AssertParentChild(SeriesDragDrop parent, SeriesDragDrop child)

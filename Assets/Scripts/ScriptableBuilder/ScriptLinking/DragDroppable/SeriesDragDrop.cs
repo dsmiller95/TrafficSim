@@ -7,14 +7,14 @@ using System.Linq;
 
 namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 {
-    public class SeriesDragDrop : BaseDragDrop
+    public class SeriesDragDrop : BaseDragDrop, IChainableSeries<IScriptableEntry>
     {
         // The DragDropSeries can only support IScriptableEntry, since it inherently links in a parent-child chain
         public IScriptableEntry myScript;
 
-        public SeriesDragDrop parent;
-        private SeriesDragDrop _child;
-        public SeriesDragDrop nextExecutingChild {
+        public IChainableSeries<IScriptableEntry> parent;
+        private IChainableSeries<IScriptableEntry> _child;
+        public IChainableSeries<IScriptableEntry> nextExecutingChild {
             get {
                 return _child;
             }
@@ -22,13 +22,17 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 _child = value;
                 if(value != null)
                 {
-                    this.DraggableChildLinked(value);
+                    this.ChildLinked(value);
                 }
                 else
                 {
                     this.DraggableChildUnlinked();
                 }
             }
+        }
+        private SeriesDragDrop childAsDragDrop
+        {
+            get => this.nextExecutingChild as SeriesDragDrop;
         }
 
         public RectTransform rectTransform
@@ -52,6 +56,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         {
         }
 
+        //TODO: refactor to use IChainable
         private bool IsCompatableChild(BaseDragDrop other)
         {
             // Only change color if a link is possible
@@ -92,17 +97,17 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             base.OnDragStart();
             if (this.parent != null)
             {
-                this.parent.nextExecutingChild = null;
-                this.parent = null;
+                this.parent.AbortChild(this);
+                this.SetParent(null);
             }
         }
 
         public override void OnDragging(PointerEventData data)
         {
             base.OnDragging(data);
-            if (this.myScript.GetCanHaveChildren())
+            if (this.GetCanHaveChildren())
             {
-                this.nextExecutingChild?.UpdatePositionRelativeToParent(this.GetChildTransform());
+                this.childAsDragDrop?.UpdatePositionRelativeToParent(this.GetChildTransform());
             }
         }
 
@@ -111,7 +116,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             if (this.IsCompatableChild(other))
             {
                 var compatableOther = other as SeriesDragDrop;
-                this.AttachChild(compatableOther);
+                this.SpliceChildIn(compatableOther);
                 //compatableOther.AttachToParent(this);
             }
         }
@@ -120,10 +125,10 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         /// Called whenever the child of this dragabble is set to anything not null
         /// </summary>
         /// <param name="child">The child which has been linked to this object</param>
-        public virtual void DraggableChildLinked(SeriesDragDrop child)
+        public virtual void ChildLinked(IChainableSeries<IScriptableEntry> child)
         {
             this.baseImage.color = Color.white;
-            this.myScript.SetNextExecutingChild(child.myScript);
+            this.myScript.SetNextExecutingChild(child.GetData());
         }
 
         /// <summary>
@@ -146,95 +151,101 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 
         public void UpdatePositionRelativeToParent(Vector3 childTransform)
         {
-            this.transform.position = parent.transform.position + childTransform;
+            var compatableParent = this.parent as SeriesDragDrop;
+            this.transform.position = compatableParent.transform.position + childTransform;
             this.OnPositionChanged();
-            this.nextExecutingChild?.UpdatePositionRelativeToParent(this.GetChildTransform());
+            this.childAsDragDrop?.UpdatePositionRelativeToParent(this.GetChildTransform());
         }
 
-        private void AttachChild(SeriesDragDrop child)
-        {
-            if (child == null || !child.myScript.GetCanHaveParents())
-            {
-                return;
-            }
-            if (child.myScript.GetCanHaveChildren())
-            {
-                child.parent = this;
-                if (this.nextExecutingChild)
-                {
-                    child.CascadeFloatingChild(this.nextExecutingChild);
-                }
-                this.nextExecutingChild = child;
-            }
-            else
-            {
-                //cascade to the bottom and kick out any existing terminators
-                this.CascadeFloatingChild(child, true);
-            }
-
-            if (this.nextExecutingChild)
-            {
-                this.nextExecutingChild.UpdatePositionRelativeToParent(this.GetChildTransform());
-            }
-        }
-
-        /// <summary>
-        /// After a drag completes on top of a Lockable with children, insert the new block of Lockables directly below the target
-        ///     And cascade all previous children to the bottom of the chain
-        /// If this element can't have children, by default it will eject the floating child without a parent
-        /// </summary>
-        /// <param name="child">The child to be dropped to the bottom of the current list</param>
-        public void CascadeFloatingChild(SeriesDragDrop child, bool ejectSelfIfNoChildren = false)
-        {
-            if (this.nextExecutingChild)
-            {
-                this.nextExecutingChild.CascadeFloatingChild(child, ejectSelfIfNoChildren);
-            }
-            else
-            {
-                if (child.myScript.GetCanHaveParents())
-                {
-                    if (this.myScript.GetCanHaveChildren())
-                    {
-                        this.nextExecutingChild = child;
-                        this.nextExecutingChild.parent = this;
-                        this.nextExecutingChild.UpdatePositionRelativeToParent(this.GetChildTransform());
-                        return;
-                    }
-                    else
-                    {
-                        if (ejectSelfIfNoChildren)
-                        {
-                            // since the floating cannot be ejected, eject this element
-                            child.parent = this.parent;
-                            child.parent.nextExecutingChild = child;
-
-                            this.parent = null;
-                            this.EjectFromPosition();
-                            return;
-                        }
-                    }
-                }
-                //If child cannot be placed, it is orphaned
-                child.parent = null;
-                child.EjectFromPosition();
-            }
-        }
-
-        /// <summary>
-        /// this item has been severed from its chain due to a drag taking its place
-        ///     By default this will shift the element over by its width to offset and make it visible
-        /// </summary>
-        private void EjectFromPosition()
+        public void OnSelfEjected()
         {
             this.rectTransform.position = this.rectTransform.position + this.rectTransform.sizeDelta.x * Vector3.right;
-            this.nextExecutingChild?.UpdatePositionRelativeToParent(this.GetChildTransform());
+            var childAsDragDrop = this.nextExecutingChild as SeriesDragDrop;
+            if(childAsDragDrop != null)
+            {
+                childAsDragDrop.UpdatePositionRelativeToParent(this.GetChildTransform());
+            }
         }
 
         private Vector2 GetMousePosOnCanvas()
         {
             var pos = Input.mousePosition;
             return new Vector2(pos.x, pos.y);
+        }
+
+        public bool GetCanHaveChildren()
+        {
+            return this.myScript.GetCanHaveChildren();
+        }
+
+        public bool GetCanHaveParents()
+        {
+            return this.myScript.GetCanHaveParents();
+        }
+
+        public IChainableSeries<IScriptableEntry> GetChild()
+        {
+            return this.nextExecutingChild;
+        }
+
+        public IChainableSeries<IScriptableEntry> GetParent()
+        {
+            return this.parent;
+        }
+
+        public bool SpliceChildIn(IChainableSeries<IScriptableEntry> newChild)
+        {
+            if(newChild == null || !this.GetCanHaveChildren() || !newChild.GetCanHaveParents())
+            {
+                return false;
+            }
+            var originalChild = this.GetChild();
+
+            this.nextExecutingChild = newChild;
+            newChild.SetParent(this);
+
+            var success = true;
+            if(originalChild != null)
+            {
+                originalChild.SetParent(null);
+
+                var newTerminator = ChainableSeriesUtilities.GetChainTerminator(newChild);
+
+                if (newTerminator.GetCanHaveChildren())
+                {
+                    //May not need to go full recursive here -- at this point, newTerminator has no children and originaChild has no parents
+                    // Could end up being a simple linking method??
+                    success = newTerminator.SpliceChildIn(originalChild);
+                }
+                else
+                {
+                    //the new chain has a no-append terminator. Kick out the old chain after to replacing it with the new
+                    originalChild.OnSelfEjected();
+                }
+            }
+
+            (newChild as SeriesDragDrop)?.UpdatePositionRelativeToParent(this.GetChildTransform());
+            return success;
+        }
+
+        public IScriptableEntry GetData()
+        {
+            return this.myScript;
+        }
+
+        public void SetParent(IChainableSeries<IScriptableEntry> parent)
+        {
+            this.parent = parent;
+        }
+
+        public bool AbortChild(IChainableSeries<IScriptableEntry> child)
+        {
+            if (this.GetChild() != null && this.GetChild() == child)
+            {
+                this.nextExecutingChild = null;
+                return true;
+            }
+            return false;
         }
     }
 }

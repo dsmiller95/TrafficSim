@@ -57,32 +57,32 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         private void DropInNestedSeries(SeriesDragDrop nested)
         {
             Debug.Log($"adding {nested.name} as nested under {this.name}");
-            if (nested.myScript.GetCanHaveChildren())
-            {
-                nested.parent = this;
-                if (this.nestedSeries)
-                {
-                    nested.CascadeFloatingChild(this.nestedSeries);
-                }
-                this.nestedSeries = nested;
-            }
-            else
-            {
-                if (this.nestedSeries)
-                {
-                    //cascade to the bottom and kick out any existing terminators
-                    this.nestedSeries.CascadeFloatingChild(nested, true);
-                }
-                else
-                {
-                    nested.parent = this;
-                    this.nestedSeries = nested;
-                }
-            }
-            if (this.nestedSeries)
-            {
-                this.nestedSeries.UpdatePositionRelativeToParent(this.GetNestedChildTransform());
-            }
+            //if (nested.myScript.GetCanHaveChildren())
+            //{
+            //    nested.parent = this;
+            //    if (this.nestedSeries)
+            //    {
+            //        nested.CascadeFloatingChild(this.nestedSeries);
+            //    }
+            //    this.nestedSeries = nested;
+            //}
+            //else
+            //{
+            //    if (this.nestedSeries)
+            //    {
+            //        //cascade to the bottom and kick out any existing terminators
+            //        this.nestedSeries.CascadeFloatingChild(nested, true);
+            //    }
+            //    else
+            //    {
+            //        nested.parent = this;
+            //        this.nestedSeries = nested;
+            //    }
+            //}
+            //if (this.nestedSeries)
+            //{
+            //    this.nestedSeries.UpdatePositionRelativeToParent(this.GetNestedChildTransform());
+            //}
         }
 
         protected override Vector3 GetChildTransform()
