@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ColliderSensor : MonoBehaviour, IBooleanCarSensor
+public class ColliderSensor : MonoBehaviour, ICarSensorInstance<bool>
 {
     public LayerMask colliderLayerMask;
     public CarSensorTypes sensorType;

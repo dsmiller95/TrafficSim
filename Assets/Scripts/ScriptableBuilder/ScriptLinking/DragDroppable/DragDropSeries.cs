@@ -10,7 +10,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
     public class DragDropSeries : DragDropBase
     {
         // The DragDropSeries can only support IScriptableEntry, since it inherently links in a parent-child chain
-        private IScriptableEntry myScript;
+        protected IScriptableEntry myScript;
 
         public DragDropSeries parent;
         private DragDropSeries _child;
@@ -97,9 +97,9 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             }
         }
 
-        public override void OnDragging()
+        public override void OnDragging(PointerEventData data)
         {
-            base.OnDragging();
+            base.OnDragging(data);
             if (this.myScript.GetCanHaveChildren())
             {
                 this.nextExecutingChild?.UpdatePositionRelativeToParent();

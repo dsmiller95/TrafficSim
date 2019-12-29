@@ -7,7 +7,7 @@ namespace Assets.Scripts.ScriptableBuilder.SeriesScriptable.CarActions
     /// Set the forward acceleration of the car.
     ///     Relative to current velocity: negative will always brake, positive always speeds up
     /// </summary>
-    public class SetAccelerationAction : ScriptableEntry, ICarFloatAction
+    public class SetAccelerationAction : ScriptableEntry, ICarAction
     {
         public float acceleraton = 1;
 
@@ -24,7 +24,7 @@ namespace Assets.Scripts.ScriptableBuilder.SeriesScriptable.CarActions
             return CarActionTypes.SetAcceleration;
         }
 
-        public override bool GetCompatabilityWithDraggable(DragDropSeries draggable)
+        public override bool GetCompatabilityWithDraggable(DragDropBase draggable)
         {
             return draggable is DragDropSeries;
         }

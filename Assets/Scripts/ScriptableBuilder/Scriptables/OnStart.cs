@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace Assets.Scripts.ScriptableBuilder.ScriptTriggers
 {
-    class EndStack : ScriptableEntry, ICarAction
+    class OnStart : ScriptableEntry, ICarAction
     {
         public override IScriptableEntry Execute(ICarActionable reciever)
         {
-            return null;
+            return this.child;
         }
 
-        public override bool GetCompatabilityWithDraggable(DragDropSeries draggable)
+        public override bool GetCompatabilityWithDraggable(DragDropBase draggable)
         {
             if (draggable is DragDropSeries)
             {
@@ -26,17 +26,17 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptTriggers
 
         public override bool GetCanHaveChildren()
         {
-            return false;
+            return true;
         }
 
         public override bool GetCanHaveParents()
         {
-            return true;
+            return false;
         }
 
         public CarActionTypes GetActionType()
         {
-            return CarActionTypes.End;
+            return CarActionTypes.Start;
         }
     }
 }

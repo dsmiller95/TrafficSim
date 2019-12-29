@@ -27,7 +27,7 @@ namespace Tests
             return this.canParent;
         }
 
-        public override bool GetCompatabilityWithDraggable(DragDropSeries draggable)
+        public override bool GetCompatabilityWithDraggable(DragDropBase draggable)
         {
             return true;
         }

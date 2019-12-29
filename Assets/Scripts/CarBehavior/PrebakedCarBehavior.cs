@@ -12,8 +12,8 @@ public class PrebakedCarBehavior: MonoBehaviour, ICarBehavior
     public void ExecuteBehavior(ICarActionable target)
     {
         var acceleration = maxAcceleration;
-        var farFrontSensor = this.GetCarSensor<IBooleanCarSensor>(CarSensorTypes.FrontFar);
-        var frontSensor = this.GetCarSensor<IBooleanCarSensor>(CarSensorTypes.Front);
+        var farFrontSensor = target.GetCarSensor<bool>(CarSensorTypes.FrontFar);
+        var frontSensor = target.GetCarSensor<bool>(CarSensorTypes.Front);
         if (farFrontSensor.Sense())
         {
             acceleration = -maxAcceleration / 2;
@@ -24,10 +24,5 @@ public class PrebakedCarBehavior: MonoBehaviour, ICarBehavior
         }
         target.SetForwardAcceleration(acceleration);
         //this.GetCarAction<ICarFloatAction>(actions, CarActionTypes.SetAcceleration)?.Execute(acceleration);
-    }
-
-    private T GetCarSensor<T>(CarSensorTypes type) where T : class, ICarSensor
-    {
-        return new List<T>(this.sensors.GetComponents<T>()).Where(x => x.GetSensorType() == type).FirstOrDefault();
     }
 }

@@ -12,6 +12,6 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
     /// </summary>
     public interface IDragDropBehavior
     {
-        bool GetCompatabilityWithDraggable(DragDropSeries draggable);
+        bool GetCompatabilityWithDraggable(DragDropBase draggable);
     }
 }

@@ -59,7 +59,30 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         /// <param name="other">the draggable which was dropped</param>
         public virtual void DraggableDroppedOnto(DragDropBase other)
         {
+        }
 
+        /// <summary>
+        /// Called when this object begins being dragged
+        /// </summary>
+        public virtual void OnDragStart()
+        {
+            this.baseImage.color = Color.blue;
+        }
+
+        /// <summary>
+        /// Called whenever the current object has been moved as a result of a drag
+        /// </summary>
+        public virtual void OnDragging(PointerEventData eventData)
+        {
+        }
+
+        /// <summary>
+        /// Called whenever the current object was dragging, but no longer is
+        /// Always called before <see cref="DraggableDroppedOnto(DragDropBase)"/> if on top of other draggable
+        /// </summary>
+        public virtual void OnDragEnd()
+        {
+            this.baseImage.color = Color.white;
         }
 
         public override void OnPointerEnter(PointerEventData eventData)
@@ -89,11 +112,6 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             }
         }
 
-
-        public virtual void OnDragStart()
-        {
-            this.baseImage.color = Color.blue;
-        }
         public override void OnBeginDrag(PointerEventData eventData)
         {
             dragging = true;
@@ -102,20 +120,16 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             CurrentDragging = this;
             this.OnDragStart();
         }
-
-        public virtual void OnDragging()
-        {
-        }
         public override void OnDrag(PointerEventData eventData)
         {
             this.transform.position += new Vector3(eventData.delta.x, eventData.delta.y);
-            this.OnDragging();
+            this.OnDragging(eventData);
         }
 
         public override void OnEndDrag(PointerEventData eventData)
         {
+            this.OnDragEnd();
             dragging = false;
-            this.baseImage.color = Color.white;
             CurrentDragging = null;
             var target = this.dragLinked.FirstOrDefault();
             if (target)

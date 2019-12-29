@@ -80,4 +80,10 @@ public class CarMovement : MonoBehaviour, ICarActionable
     {
         this.direction = direction;
     }
+
+    public ICarSensorInstance<T> GetCarSensor<T>(CarSensorTypes type)
+    {
+        var sensors = new List<ICarSensorInstance<T>>(this.GetComponentsInChildren<ICarSensorInstance<T>>());
+        return sensors.Where(s => s.GetSensorType() == type).FirstOrDefault();
+    }
 }
