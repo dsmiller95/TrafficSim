@@ -1,0 +1,31 @@
+DragDropInputElement : DragDropBase 
+	no children. can only drag into DragDropInput's slot
+
+DragDropBase 
+	doesn't do much. holds framework for linking drag-drops, but does not actually link.
+		EX: has awarenes of which dragabbles it is currently hovering over while being dragged
+			When the drag is released, a overridable callback prevents anything from happening
+
+DragDropSeries : DragDropBase 
+	Will drop and lock onto other DragDrops in series, forming a chain of single-child single-parents
+
+DragDropInput : DragDropSeries
+	Will drop and lock just like DragDropSeries.
+		will also accept drops from DragDropInputElement, taking ownership of them inside of its own element
+		Will keep track of all owned DragDropInputElements
+	Used for things like "SetAcceleration" when setting it to a value
+	In the future:
+		may allow for a text-based input in leu of a DragDropInputElement
+		
+ICarSensorInstance<T>
+	Used as the base for any script which is attached either directly or as
+		a child of a Car's gameObject
+	Returned by ICarSensable when queried
+	T Sense()
+	
+IScriptableCarSensor<T>
+	Used as a base for any scriptable sensor. This class needs to use ICarSensorInstance to actually execute a sensation
+	T Sense(ICarSensable target)
+
+ICarSensable
+	ICarSensorInstance<T> GetCarSensor<T>(SensorType type)
