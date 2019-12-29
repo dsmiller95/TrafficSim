@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Assets.Scripts.ScriptableBuilder.ScriptLinking;
 using UnityEngine;
@@ -48,16 +49,9 @@ namespace Assets.Scripts.ScriptableBuilder.SeriesScriptable.CarActions
             return draggable is DragDropInput;
         }
 
-        public IList<ScriptableEntryInputConfig> GetInputConfigs()
+        public bool ValidateInputs(IEnumerable<Type> inputs)
         {
-            return new List<ScriptableEntryInputConfig>()
-            {
-                new ScriptableEntryInputConfig
-                {
-                    droppableZone = new Rect(0, 0, 50, 20),
-                    acceptedType = typeof(bool)
-                }
-            };
+            return inputs.SequenceEqual(new Type[] { typeof(bool) });
         }
 
         private IScriptableInput<bool> firstBoolInput;

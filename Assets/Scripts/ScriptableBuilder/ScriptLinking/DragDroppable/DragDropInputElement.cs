@@ -29,5 +29,10 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 throw new System.Exception($"Critical: behavior {this.myScript} is incompatable with the current dragabble implementation");
             }
         }
+
+        public void PositionSelfRelativeToContainer(Vector2 containerPosition)
+        {
+            this.transform.position = containerPosition;
+        }
     }
 }

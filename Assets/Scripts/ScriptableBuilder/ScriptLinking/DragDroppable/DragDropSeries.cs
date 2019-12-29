@@ -146,6 +146,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         private void UpdatePositionRelativeToParent()
         {
             this.transform.position = parent.transform.position + parent.GetChildTransform();
+            this.OnPositionChanged();
             this.nextExecutingChild?.UpdatePositionRelativeToParent();
         }
 

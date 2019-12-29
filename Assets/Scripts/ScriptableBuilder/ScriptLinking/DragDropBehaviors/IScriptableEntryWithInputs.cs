@@ -13,20 +13,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
     /// </summary>
     public interface IScriptableEntryWithInputs : IScriptableEntry
     {
-        IList<ScriptableEntryInputConfig> GetInputConfigs();
+        bool ValidateInputs(IEnumerable<Type> inputTypes);
         void SetInputElements(IList<IScriptableInput> inputs);
-    }
-
-    public struct ScriptableEntryInputConfig
-    {
-        /// <summary>
-        /// The area which will accept a drop, positioned relative to the current GameObject
-        /// </summary>
-        public Rect droppableZone;
-
-        /// <summary>
-        /// The type which this input slot expects
-        /// </summary>
-        public Type acceptedType;
     }
 }

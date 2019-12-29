@@ -4,6 +4,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
+using Assets.Scripts.ScriptableBuilder.ScriptLinking.DragDroppable;
+using System;
 
 namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 {
@@ -15,15 +17,18 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
     {
         private class InputSlot
         {
-            ScriptableEntryInputConfig config;
+            public Type acceptedType;
             public DragDropInputElement linkedElement;
-            public InputSlot(ScriptableEntryInputConfig conf)
+            public InputDropSlot slotObj;
+            public InputSlot(InputDropSlot slotObj)
             {
-                this.config = conf;
+                this.slotObj = slotObj;
+                this.acceptedType = slotObj.acceptedType;
             }
-            public bool AttemptToFitElement(DragDropInputElement element, Vector2 mousePosInParent)
+            public bool AttemptToFitElement(DragDropInputElement element, Vector2 mousePos)
             {
-                if (element.outputType == config.acceptedType && this.config.droppableZone.Contains(mousePosInParent))
+                if (element.outputType == this.acceptedType
+                    && this.slotObj.rectTransform.rect.Contains(this.slotObj.rectTransform.InverseTransformPoint(mousePos)))
                 {
                     this.linkedElement = element;
                     Debug.Log($"Linked input element: {element}");
@@ -31,9 +36,17 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 }
                 return false;
             }
+
+            public void PositionLinkedRelativeToSlot()
+            {
+                if (this.linkedElement != null)
+                {
+                    this.linkedElement.PositionSelfRelativeToContainer(this.slotObj.rectTransform.position);
+                }
+            }
         }
 
-        private IList<InputSlot> inputSlots;
+        private List<InputSlot> inputSlots;
 
         public override void Start()
         {
@@ -42,10 +55,14 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             {
                 throw new System.Exception("ERROR: incompatable script attached");
             }
-            this.inputSlots = (this.myScript as IScriptableEntryWithInputs)
-                    .GetInputConfigs()
-                    .Select(config => new InputSlot(config))
-                    .ToList();
+            this.inputSlots = new List<InputDropSlot>(this.GetComponentsInChildren<InputDropSlot>())
+                .Select(dropSlot => new InputSlot(dropSlot))
+                .ToList();
+
+            if(!(this.myScript as IScriptableEntryWithInputs).ValidateInputs(this.inputSlots.Select(slot => slot.acceptedType)))
+            {
+                throw new System.Exception($"Critical Error: GameObject {this.name} not set up with correct InputDropSlots");
+            }
         }
 
         public override void DraggableDroppedOnto(DragDropBase other)
@@ -60,8 +77,9 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 
             foreach(var slot in this.inputSlots)
             {
-                if (slot.AttemptToFitElement(inputElement, this.rectTransform.InverseTransformPoint(Input.mousePosition)))
+                if (slot.AttemptToFitElement(inputElement, Input.mousePosition))
                 {
+                    inputElement.PositionSelfRelativeToContainer(slot.slotObj.rectTransform.position);
                     break;
                 }
             }
@@ -70,6 +88,15 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 .Where(slot => slot.linkedElement)
                 .Select(slot => slot.linkedElement.myScript)
                 .ToList());
+        }
+
+        public override void OnPositionChanged()
+        {
+            base.OnPositionChanged();
+            this.inputSlots.ForEach(slot =>
+            {
+                slot.PositionLinkedRelativeToSlot();
+            });
         }
     }
 }

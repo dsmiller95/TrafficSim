@@ -74,6 +74,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         /// </summary>
         public virtual void OnDragging(PointerEventData eventData)
         {
+            this.OnPositionChanged();
         }
 
         /// <summary>
@@ -83,6 +84,13 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         public virtual void OnDragEnd()
         {
             this.baseImage.color = Color.white;
+        }
+
+        /// <summary>
+        /// Called whenever the position of this element is changed for any reason via any DragDropBase actions
+        /// </summary>
+        public virtual void OnPositionChanged()
+        {
         }
 
         public override void OnPointerEnter(PointerEventData eventData)
