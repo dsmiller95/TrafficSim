@@ -36,7 +36,6 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 
         public void SetNextExecutingChild(IScriptableEntry child)
         {
-            Debug.Log($"Setting next child: {child}");
             this.child = child;
         }
 
