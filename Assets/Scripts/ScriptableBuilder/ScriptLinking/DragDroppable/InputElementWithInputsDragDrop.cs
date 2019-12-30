@@ -4,30 +4,30 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
-using Assets.Scripts.ScriptableBuilder.ScriptLinking.DragDroppable;
 using System;
+using Assets.Scripts.ScriptableBuilder.ScriptLinking.DragDroppable;
 
 namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 {
     /// <summary>
-    /// An element which in addition to forming a chain, can also accept input elements.
-    /// EX: accelerate, setVelocity
+    /// Class to model items like sensors and variables
+    ///     will allow for self to be dragged into "slots", but cannot enter into a Series chain
     /// </summary>
-    public class InputDragDrop : SeriesDragDrop
+    public class InputElementWithInputsDragDrop : InputElementDragDrop
     {
         private List<InputDropSlot> inputSlots;
-
         public override void Start()
         {
             base.Start();
-            if (!(this.myScript is IScriptableEntryWithInputs))
+            if (!(this.myScript is IScriptableWithInputs) || !this.myScript.GetCompatabilityWithDraggable(this))
             {
-                throw new System.Exception("ERROR: incompatable script attached");
+                throw new System.Exception($"Critical: behavior {this.myScript} is incompatable with the current dragabble implementation");
             }
+
             this.inputSlots = new List<InputDropSlot>(this.GetComponentsInChildren<InputDropSlot>())
                 .ToList();
 
-            if(!(this.myScript as IScriptableWithInputs).ValidateInputs(this.inputSlots.Select(slot => slot.acceptedType)))
+            if (!(this.myScript as IScriptableWithInputs).ValidateInputs(this.inputSlots.Select(slot => slot.acceptedType)))
             {
                 throw new System.Exception($"Critical Error: GameObject {this.name} not set up with correct InputDropSlots");
             }
@@ -42,7 +42,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 return;
             }
 
-            foreach(var slot in this.inputSlots)
+            foreach (var slot in this.inputSlots)
             {
                 if (slot.AttemptToFitElement(inputElement, Input.mousePosition))
                 {
@@ -54,15 +54,6 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             (this.myScript as IScriptableWithInputs).SetInputElements(this.inputSlots
                 .Select(slot => slot?.GetInputScript())
                 .ToList());
-        }
-
-        public override void OnPositionChanged()
-        {
-            base.OnPositionChanged();
-            this.inputSlots.ForEach(slot =>
-            {
-                slot.PositionLinkedRelativeToSlot();
-            });
         }
     }
 }

@@ -23,7 +23,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         T Sense(ICarSensable target);
     }
 
-    public interface IScriptableInputWithInputs<T>: IScriptableInput<T>, IScriptableWithInputs
+    public interface IScriptableInputWithInputs<T> : IScriptableInput<T>, IScriptableWithInputs
     {
 
     }
