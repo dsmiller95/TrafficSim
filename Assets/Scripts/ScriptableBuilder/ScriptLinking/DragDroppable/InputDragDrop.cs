@@ -15,38 +15,8 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
     /// </summary>
     public class InputDragDrop : SeriesDragDrop
     {
-        private class InputSlot
-        {
-            public Type acceptedType;
-            public InputElementDragDrop linkedElement;
-            public InputDropSlot slotObj;
-            public InputSlot(InputDropSlot slotObj)
-            {
-                this.slotObj = slotObj;
-                this.acceptedType = slotObj.acceptedType;
-            }
-            public bool AttemptToFitElement(InputElementDragDrop element, Vector2 mousePos)
-            {
-                if (element.outputType == this.acceptedType
-                    && this.slotObj.rectTransform.rect.Contains(this.slotObj.rectTransform.InverseTransformPoint(mousePos)))
-                {
-                    this.linkedElement = element;
-                    Debug.Log($"Linked input element: {element}");
-                    return true;
-                }
-                return false;
-            }
 
-            public void PositionLinkedRelativeToSlot()
-            {
-                if (this.linkedElement != null)
-                {
-                    this.linkedElement.PositionSelfRelativeToContainer(this.slotObj.rectTransform.position);
-                }
-            }
-        }
-
-        private List<InputSlot> inputSlots;
+        private List<InputDropSlot> inputSlots;
 
         public override void Start()
         {
@@ -56,7 +26,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 throw new System.Exception("ERROR: incompatable script attached");
             }
             this.inputSlots = new List<InputDropSlot>(this.GetComponentsInChildren<InputDropSlot>())
-                .Select(dropSlot => new InputSlot(dropSlot))
+                //.Select(dropSlot => new InputSlot(dropSlot))
                 .ToList();
 
             if(!(this.myScript as IScriptableEntryWithInputs).ValidateInputs(this.inputSlots.Select(slot => slot.acceptedType)))
@@ -78,13 +48,13 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             {
                 if (slot.AttemptToFitElement(inputElement, Input.mousePosition))
                 {
-                    inputElement.PositionSelfRelativeToContainer(slot.slotObj.rectTransform.position);
+                    slot.PositionLinkedRelativeToSlot();
                     break;
                 }
             }
 
             (this.myScript as IScriptableEntryWithInputs).SetInputElements(this.inputSlots
-                .Select(slot => slot.linkedElement?.myScript)
+                .Select(slot => slot?.GetInputScript())
                 .ToList());
         }
 

@@ -15,7 +15,7 @@ public class ColliderSensor : MonoBehaviour, ICarSensorInstance<bool>
 
     public bool Sense()
     {
-        return !this.capsuleCollider.IsTouchingLayers(this.colliderLayerMask);
+        return this.capsuleCollider.IsTouchingLayers(this.colliderLayerMask);
     }
 
     // Use this for initialization

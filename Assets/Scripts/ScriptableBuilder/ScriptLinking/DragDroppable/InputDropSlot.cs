@@ -15,8 +15,10 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking.DragDroppable
             get => this.GetComponent<RectTransform>();
         }
 
-        public Type acceptedType {
-            get {
+        public Type acceptedType
+        {
+            get
+            {
                 switch (this.externalType)
                 {
                     case PossibleSlotType.Float:
@@ -27,6 +29,33 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking.DragDroppable
                         return null;
                 }
             }
+        }
+
+        //private Type acceptedType;
+        private InputElementDragDrop linkedElement;
+        public bool AttemptToFitElement(InputElementDragDrop element, Vector2 mousePos)
+        {
+            if (element.outputType == this.acceptedType
+                && this.rectTransform.rect.Contains(this.rectTransform.InverseTransformPoint(mousePos)))
+            {
+                this.linkedElement = element;
+                Debug.Log($"Linked input element: {element}");
+                return true;
+            }
+            return false;
+        }
+
+        public void PositionLinkedRelativeToSlot()
+        {
+            if (this.linkedElement != null)
+            {
+                this.linkedElement.PositionSelfRelativeToContainer(this.rectTransform.position);
+            }
+        }
+
+        public IScriptableInput GetInputScript()
+        {
+            return this.linkedElement.myScript;
         }
     }
 
