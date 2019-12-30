@@ -32,7 +32,7 @@ public class ScriptConfiguredCarBehavior: MonoBehaviour, ICarBehavior
             if (pointer != null)
             {
                 var mono = pointer as MonoBehaviour;
-                Debug.Log($"Executing {mono.name} pointer");
+                Debug.Log($"Executing {mono?.name} pointer");
                 nextPointers.Add(pointer.Execute(target));
             }
         }

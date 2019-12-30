@@ -13,19 +13,89 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
     /// </summary>
     public class NestedDragDrop : InputDragDrop
     {
-        private SeriesDragDrop _nestedSeries;
-        private SeriesDragDrop nestedSeries
+        private IChainableSeries<IScriptableEntry> _nestedSeries;
+        private IChainableSeries<IScriptableEntry> nestedSeries
         {
             get {
                 return _nestedSeries;
             }
             set
             {
-                (this.myScript as IScriptableEntryNested).SetNestedChild(value.myScript);
+                (this.myScript as IScriptableEntryNested).SetNestedChild(value?.GetData());
                 this._nestedSeries = value;
             }
         }
 
+        private NestedChildChainTerminator pairedNestedBlockTerminator;
+
+        private class NestedChildChainTerminator : IChainableSeries<IScriptableEntry>
+        {
+            private IChainableSeries<IScriptableEntry> parent;
+            private NestedDragDrop owner;
+            private IScriptableEntryNestedBlockTerminator terminatorBehavior;
+            public NestedChildChainTerminator(NestedDragDrop owner)
+            {
+                this.owner = owner;
+                var ownerScriptTyped = (owner.myScript as IScriptableEntryNested);
+                this.terminatorBehavior = ownerScriptTyped.GetNestedBlockTerminator();
+                this.terminatorBehavior.SetPairedNestingParent(ownerScriptTyped);
+            }
+
+            /// <summary>
+            /// used to set the child of this node as associated with the Terminator. 
+            /// </summary>
+            /// <param name="childScript"></param>
+            public void SetScriptChild(IScriptableEntry childScript)
+            {
+                Debug.Log($"Script child set {childScript}");
+                this.terminatorBehavior.SetNextExecutingChild(childScript);
+            }
+
+            public bool AbortChild(IChainableSeries<IScriptableEntry> child)
+            {
+                return false;
+            }
+
+            public bool GetCanHaveChildren()
+            {
+                return false;
+            }
+
+            public bool GetCanHaveParents()
+            {
+                return true;
+            }
+
+            public IChainableSeries<IScriptableEntry> GetChild()
+            {
+                return null;
+            }
+
+            public IScriptableEntry GetData()
+            {
+                return this.terminatorBehavior;
+            }
+
+            public IChainableSeries<IScriptableEntry> GetParent()
+            {
+                return this.parent;
+            }
+
+            public void OnSelfEjected()
+            {
+                //Todo: maybe do nothing
+                //throw new NotImplementedException();
+            }
+            public void SetParent(IChainableSeries<IScriptableEntry> parent)
+            {
+                this.parent = parent;
+            }
+
+            public bool SpliceChildIn(IChainableSeries<IScriptableEntry> chainHead)
+            {
+                return false;
+            }
+        }
 
         public override void Start()
         {
@@ -34,6 +104,14 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             {
                 throw new System.Exception("ERROR: incompatable script attached");
             }
+            this.pairedNestedBlockTerminator = new NestedChildChainTerminator(this);
+            this.pairedNestedBlockTerminator.SetScriptChild(this.nextExecutingChild?.GetData());
+        }
+
+        public override void ChildLinked(IChainableSeries<IScriptableEntry> child)
+        {
+            base.ChildLinked(child);
+            this.pairedNestedBlockTerminator.SetScriptChild(this.nextExecutingChild?.GetData());
         }
 
         public override void DraggableDroppedOnto(BaseDragDrop other)
@@ -50,44 +128,48 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 
         public override void OnPositionChanged()
         {
-            this.nestedSeries?.UpdatePositionRelativeToParent(this.GetNestedChildTransform());
+            (this.nestedSeries as SeriesDragDrop)?.UpdatePositionRelativeToParent(this.GetNestedChildTransform());
             base.OnPositionChanged();
         }
 
-        private void DropInNestedSeries(SeriesDragDrop nested)
+        public override bool AbortChild(IChainableSeries<IScriptableEntry> child)
         {
-            Debug.Log($"adding {nested.name} as nested under {this.name}");
-            //if (nested.myScript.GetCanHaveChildren())
-            //{
-            //    nested.parent = this;
-            //    if (this.nestedSeries)
-            //    {
-            //        nested.CascadeFloatingChild(this.nestedSeries);
-            //    }
-            //    this.nestedSeries = nested;
-            //}
-            //else
-            //{
-            //    if (this.nestedSeries)
-            //    {
-            //        //cascade to the bottom and kick out any existing terminators
-            //        this.nestedSeries.CascadeFloatingChild(nested, true);
-            //    }
-            //    else
-            //    {
-            //        nested.parent = this;
-            //        this.nestedSeries = nested;
-            //    }
-            //}
-            //if (this.nestedSeries)
-            //{
-            //    this.nestedSeries.UpdatePositionRelativeToParent(this.GetNestedChildTransform());
-            //}
+            if (base.AbortChild(child))
+            {
+                return true;
+            }
+
+            if(this.nestedSeries == child)
+            {
+                this.nestedSeries = null;
+                return true;
+            }
+            return false;
         }
 
         protected override Vector3 GetChildTransform()
         {
             //TODO: find the end of the nestedSeries
+            if (this.nestedSeries != null)
+            {
+                var currentTerminator = ChainableSeriesUtilities.GetChainTerminator(this.nestedSeries);
+                if(currentTerminator == this.pairedNestedBlockTerminator)
+                {
+                    currentTerminator = currentTerminator.GetParent();
+                }
+#pragma warning disable CS0252 // Possible unintended reference comparison; left hand side needs cast
+                if (currentTerminator == this)
+#pragma warning restore CS0252 // Possible unintended reference comparison; left hand side needs cast
+                {
+                    return base.GetChildTransform();
+                }
+                var draggableTerminator = currentTerminator as SeriesDragDrop;
+                if(draggableTerminator == null)
+                {
+                    return base.GetChildTransform();
+                }
+                return base.GetChildTransform() + (draggableTerminator.transform.position - this.transform.position - this.GetNestedOffset());
+            }
             return base.GetChildTransform();
         }
 
@@ -97,7 +179,53 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         /// <returns></returns>
         private Vector3 GetNestedChildTransform()
         {
-            return base.GetChildTransform() + (Vector3.right * this.rectTransform.sizeDelta.x / 2);
+            return base.GetChildTransform() + this.GetNestedOffset();
+        }
+
+        private Vector3 GetNestedOffset()
+        {
+            return (this.rectTransform.sizeDelta.x / 2) * Vector3.right;
+        }
+
+        private void DropInNestedSeries(IChainableSeries<IScriptableEntry> newNested)
+        {
+            Debug.Log($"adding {(newNested as MonoBehaviour)?.name} as nested under {this.name}");
+
+            if(newNested == null || !newNested.GetCanHaveParents())
+            {
+                throw new Exception("ERROR: invalid nesting. see logs");
+            }
+
+            var originalNested = this.nestedSeries;
+
+            this.nestedSeries = newNested;
+            newNested.SetParent(this);
+
+            if(originalNested != null)
+            {
+                originalNested.SetParent(null);
+
+                var newTerminator = ChainableSeriesUtilities.GetChainTerminator(newNested);
+
+                if (newTerminator.GetCanHaveChildren())
+                {
+                    newTerminator.SpliceChildIn(originalNested);
+                }
+                else
+                {
+                    originalNested.OnSelfEjected();
+                }
+            }
+
+            var currentTerminator = ChainableSeriesUtilities.GetChainTerminator(this.nestedSeries);
+            if (currentTerminator.GetCanHaveChildren())
+            {
+                this.pairedNestedBlockTerminator.GetParent()?.AbortChild(this.pairedNestedBlockTerminator);
+                this.pairedNestedBlockTerminator.SetParent(null);
+                currentTerminator.SpliceChildIn(this.pairedNestedBlockTerminator);
+            }
+
+            (newNested as SeriesDragDrop).UpdatePositionRelativeToParent(this.GetNestedChildTransform());
         }
 
         /// <summary>

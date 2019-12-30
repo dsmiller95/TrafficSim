@@ -238,7 +238,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             this.parent = parent;
         }
 
-        public bool AbortChild(IChainableSeries<IScriptableEntry> child)
+        public virtual bool AbortChild(IChainableSeries<IScriptableEntry> child)
         {
             if (this.GetChild() != null && this.GetChild() == child)
             {

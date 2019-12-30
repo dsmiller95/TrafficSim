@@ -35,6 +35,11 @@ namespace Assets.Scripts.ScriptableBuilder.Scriptables.ControlScriptables
             return draggable is NestedDragDrop;
         }
 
+        public override IScriptableEntryNestedBlockTerminator GetNestedBlockTerminator()
+        {
+            return new PassthroughNestedTerminator();
+        }
+
         public override void SetInputElements(IList<IScriptableInput> inputs)
         {
             if(inputs != null)

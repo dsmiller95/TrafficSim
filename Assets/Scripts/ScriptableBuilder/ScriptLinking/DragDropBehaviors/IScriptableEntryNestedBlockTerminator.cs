@@ -11,9 +11,8 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
     /// Base class for any action which can have children under it or parents above
     ///     Examples: SetAcceleration, SetVelocity, Start, End
     /// </summary>
-    public interface IScriptableEntryNested : IScriptableEntryWithInputs
+    public interface IScriptableEntryNestedBlockTerminator : IScriptableEntry
     {
-        void SetNestedChild(IScriptableEntry child);
-        IScriptableEntryNestedBlockTerminator GetNestedBlockTerminator();
+        void SetPairedNestingParent(IScriptableEntryNested parent);
     }
 }

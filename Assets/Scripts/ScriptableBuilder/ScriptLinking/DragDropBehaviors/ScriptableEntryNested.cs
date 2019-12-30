@@ -21,5 +21,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 
         public abstract void SetInputElements(IList<IScriptableInput> inputs);
         public abstract bool ValidateInputs(IEnumerable<Type> inputTypes);
+
+        public abstract IScriptableEntryNestedBlockTerminator GetNestedBlockTerminator();
     }
 }
