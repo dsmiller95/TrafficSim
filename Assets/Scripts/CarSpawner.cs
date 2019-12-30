@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Assets.Scripts.ScriptableBuilder.ScriptLinking;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,6 +9,9 @@ namespace Assets.Scripts
     {
         public GameObject targetRoad;
         public GameObject spawnTarget;
+        public GameObject behaviorFactory;
+        public KeyCode spawnKey;
+        public bool shouldAutoSpawn;
         public List<int> navigableRouteIndexes = new List<int>(0);
         public float spawnSpeed = 4;
         public bool spawnDirection;
@@ -18,7 +22,7 @@ namespace Assets.Scripts
         // Start is called before the first frame update
         void Start()
         {
-            SpawnObject();
+            //SpawnObject();
         }
 
         private void SpawnObject()
@@ -35,17 +39,29 @@ namespace Assets.Scripts
 
             var rigidbody = spawned.GetComponent<Rigidbody2D>();
             rigidbody.isKinematic = false;
+
+            var behaviorFactoryElement = this.behaviorFactory.GetComponent<ScriptableObjectContainerController>();
+            behaviorFactoryElement.AttachCarBehaviorFromScriptField(spawned);
         }
 
         private float timeSinceLastSpawn = 0;
         // Update is called once per frame
         void Update()
         {
-            timeSinceLastSpawn += Time.deltaTime;
-            if(timeSinceLastSpawn > this.avgSpawnInterval)
+            if (shouldAutoSpawn)
             {
-                this.timeSinceLastSpawn = 0;
-                this.SpawnObject();
+                timeSinceLastSpawn += Time.deltaTime;
+                if (timeSinceLastSpawn > this.avgSpawnInterval)
+                {
+                    this.timeSinceLastSpawn = 0;
+                    this.SpawnObject();
+                }
+            }else
+            {
+                if (Input.GetKeyDown(this.spawnKey))
+                {
+                    this.SpawnObject();
+                }
             }
         }
     }

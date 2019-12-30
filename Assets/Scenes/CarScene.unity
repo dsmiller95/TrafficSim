@@ -601,7 +601,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &226277971
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -617,6 +617,9 @@ MonoBehaviour:
   targetRoad: {fileID: 1025811664}
   spawnTarget: {fileID: 2345771687714094421, guid: e8362c35c93e12940807e078e1339d50,
     type: 3}
+  behaviorFactory: {fileID: 1386122639}
+  spawnKey: 114
+  shouldAutoSpawn: 0
   navigableRouteIndexes: 0200000003000000
   spawnSpeed: 5
   spawnDirection: 1
@@ -2942,8 +2945,7 @@ PrefabInstance:
       propertyPath: spriteShape
       value: 
       objectReference: {fileID: 1025811664}
-    m_RemovedComponents:
-    - {fileID: 1517511415163971627, guid: e8362c35c93e12940807e078e1339d50, type: 3}
+    m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e8362c35c93e12940807e078e1339d50, type: 3}
 --- !u!1001 &1692722783
 PrefabInstance:
@@ -3261,6 +3263,9 @@ MonoBehaviour:
   targetRoad: {fileID: 1025811664}
   spawnTarget: {fileID: 2345771687714094421, guid: e8362c35c93e12940807e078e1339d50,
     type: 3}
+  behaviorFactory: {fileID: 0}
+  spawnKey: 0
+  shouldAutoSpawn: 0
   navigableRouteIndexes: 0000000001000000
   spawnSpeed: 5
   spawnDirection: 0

@@ -50,10 +50,10 @@ public class CarMovement : MonoBehaviour, ICarActionable
         {
             this.UpdatePosition(Time.deltaTime, this.velocity * (this.direction ? 1 : -1));
         }
-        if (Input.GetKeyDown(KeyCode.F))
-        {
+        //if (Input.GetKeyDown(KeyCode.F))
+        //{
             this.carBehavior?.ExecuteBehavior(this);
-        }
+        //}
     }
 
     private void UpdatePosition(float deltaT, float velocity)
