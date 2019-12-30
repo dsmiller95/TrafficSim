@@ -16,7 +16,7 @@ namespace Assets.Scripts.ScriptableBuilder.Scriptables.ControlScriptables.Operat
 
         public override bool Sense(ICarSensable target)
         {
-            return this.booleanInput.Sense(target);
+            return !this.booleanInput.Sense(target);
         }
 
         private IScriptableInput<bool> booleanInput;

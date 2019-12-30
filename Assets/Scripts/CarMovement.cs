@@ -50,7 +50,10 @@ public class CarMovement : MonoBehaviour, ICarActionable
         {
             this.UpdatePosition(Time.deltaTime, this.velocity * (this.direction ? 1 : -1));
         }
-        this.carBehavior?.ExecuteBehavior(this);
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            this.carBehavior?.ExecuteBehavior(this);
+        }
     }
 
     private void UpdatePosition(float deltaT, float velocity)
@@ -73,6 +76,7 @@ public class CarMovement : MonoBehaviour, ICarActionable
 
     public void SetForwardAcceleration(float newAcceleration)
     {
+        Debug.Log($"Accelerate set to {newAcceleration}");
         this.acceleration = newAcceleration;
     }
 

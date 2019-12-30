@@ -12,6 +12,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
     /// <summary>
     /// Class to model items like sensors and variables
     ///     will allow for self to be dragged into "slots", but cannot enter into a Series chain
+    ///     This variation accepts other inputs and performs some operation on the two. Used for things like arithmetic operations
     /// </summary>
     public class InputElementWithInputsDragDrop : InputElementDragDrop
     {
@@ -54,6 +55,14 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             (this.myScript as IScriptableWithInputs).SetInputElements(this.inputSlots
                 .Select(slot => slot?.GetInputScript())
                 .ToList());
+        }
+        public override void PositionSelfRelativeToContainer(Vector2 containerPosition)
+        {
+            base.PositionSelfRelativeToContainer(containerPosition);
+            this.inputSlots.ForEach(slot =>
+            {
+                slot.PositionLinkedRelativeToSlot();
+            });
         }
     }
 }

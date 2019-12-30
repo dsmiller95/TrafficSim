@@ -30,9 +30,10 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             }
         }
 
-        public void PositionSelfRelativeToContainer(Vector2 containerPosition)
+        public virtual void PositionSelfRelativeToContainer(Vector2 containerPosition)
         {
             this.transform.position = containerPosition;
+            base.OnPositionChanged();
         }
     }
 }
