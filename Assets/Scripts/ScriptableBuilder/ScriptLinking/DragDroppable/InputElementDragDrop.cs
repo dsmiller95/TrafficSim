@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using Assets.Scripts.ScriptableBuilder.ScriptLinking.DragDroppable;
 
 namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 {
@@ -12,7 +13,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
     /// Class to model items like sensors and variables
     ///     will allow for self to be dragged into "slots", but cannot enter into a Series chain
     /// </summary>
-    public class InputElementDragDrop : BaseDragDrop
+    public class InputElementDragDrop : BaseDragDrop, IInputElement
     {
         public IScriptableInput myScript;
         public Type outputType
