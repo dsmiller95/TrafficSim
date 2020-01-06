@@ -127,5 +127,14 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             this.inputSlots.ForEach(slot => slot.AttemptAbortChild(child as InputElementDragDrop));
             this.OnContainedUpdated(null);
         }
+
+        public override void OnDragging(PointerEventData data)
+        {
+            base.OnDragging(data);
+            this.inputSlots.ForEach(slot =>
+            {
+                slot.PassContainerUpdated();
+            });
+        }
     }
 }

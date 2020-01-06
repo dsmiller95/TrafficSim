@@ -15,6 +15,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking.DragDroppable
             get => this.GetComponent<RectTransform>();
         }
         private Vector2 defaultSize;
+        private IInputElementContainer myContainer;
 
         public Type acceptedType
         {
@@ -38,6 +39,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking.DragDroppable
         public void Start()
         {
             this.defaultSize = this.rectTransform.sizeDelta;
+            this.myContainer = this.gameObject.GetComponentInParent<IInputElementContainer>();
         }
 
         public bool AttemptToFitElement(InputElementDragDrop element, Vector2 mousePos)
@@ -46,6 +48,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking.DragDroppable
                 && this.rectTransform.rect.Contains(this.rectTransform.InverseTransformPoint(mousePos)))
             {
                 this.linkedElement = element;
+                this.linkedElement.SetContainer(this.myContainer);
                 Debug.Log($"Linked input element: {element}");
                 return true;
             }

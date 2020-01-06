@@ -34,6 +34,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         public override void OnDragStart()
         {
             base.OnDragStart();
+            Debug.Log($"attempting to abort {this.name} from {(this.container as MonoBehaviour)?.name}");
             this.container?.OnContainedRemoved(this);
         }
 

@@ -144,6 +144,12 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             base.DraggableDroppedOnto(other);
         }
 
+        public override void OnParentUpdated(Vector2 childTransform)
+        {
+            base.OnParentUpdated(childTransform);
+            this.nestedSeries?.OnParentUpdated(this.GetNestedChildTransform());
+        }
+
         public override void OnDragging(PointerEventData data)
         {
             base.OnDragging(data);
@@ -178,8 +184,10 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 if (currentPhysicalTerminator == this || !(currentPhysicalTerminator is SeriesDragDrop))
 #pragma warning restore CS0252 // Possible unintended reference comparison; left hand side needs cast
                 {
+                    // Debug.Log($"defaulting to base child transform. Current physicalTerminator: {(currentPhysicalTerminator as MonoBehaviour)?.name}");
                     return base.GetChildTransform();
                 }
+                //TODO: find the size of the nested block and use that to determine the position
                 var draggableTerminator = currentPhysicalTerminator as SeriesDragDrop;
                 return base.GetChildTransform() + (draggableTerminator.transform.position + -this.transform.position + -this.GetNestedOffset());
             }
@@ -214,6 +222,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 
             ChainableSeriesUtilities.UpdateOriginalChildAfterSplice(originalNested, newNested);
 
+            this.nestedSeries?.OnParentUpdated(this.GetNestedChildTransform());
             this.OnChildUpdated(this.nestedSeries);
             //var currentTerminator = ChainableSeriesUtilities.GetChainTerminator(this.nestedSeries);
             //if (currentTerminator.GetCanHaveChildren())
@@ -256,7 +265,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                         currentTerminator.SimpleAppendChild(this.pairedNestedBlockTerminator);
                     }
                 }
-                this.GetChild().OnParentUpdated(this.GetChildTransform());
+                this.GetChild()?.OnParentUpdated(this.GetChildTransform());
             }
             base.OnChildUpdated(child);
         }

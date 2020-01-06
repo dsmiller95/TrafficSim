@@ -248,6 +248,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 throw new InvalidOperationException($"Cannot append child to {this.name}");
             }
             this.nextExecutingChild = child;
+            this.nextExecutingChild.SetParent(this);
         }
     }
 }

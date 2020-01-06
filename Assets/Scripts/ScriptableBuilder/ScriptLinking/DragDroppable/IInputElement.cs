@@ -30,7 +30,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking.DragDroppable
 
 
         /// <summary>
-        /// Sets the "parent" of this component, AKA the element which will recieve any bottom-up updated
+        /// Sets the "parent" of this component, AKA the element which will recieve any bottom-up updates
         /// </summary>
         /// <param name="container"></param>
         void SetContainer(IInputElementContainer container);
