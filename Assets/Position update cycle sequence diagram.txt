@@ -21,13 +21,15 @@ input component->Parent:OnChildUpdated
 Parent->GrandParent If Block:OnChildUpdated
 grandchild nested if block terminator<-GrandParent If Block:GetBottomPosition
 GrandParent If Block->GrandParent If Block:Update size Based on nested children
-GrandParent If Block->If block parent:OnChildUpdated
+expandable− update nested siblings
 GrandParent If Block->If block child:OnParentUpdated
 If block child->If block child:UpdatePositionRelativeToParent
+GrandParent If Block->If block parent:OnChildUpdated
+end
 end
 end
 
-expandable− Update contained inputs
+expandable− Update contained input positions
 updated operator element->input element:OnParentUpdated
 input element->input element:UpdatePositionRelativeToSlot
 end
