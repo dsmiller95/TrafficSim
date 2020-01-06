@@ -1,0 +1,33 @@
+title This is a title
+
+
+updated operator element->updated operator element:onRecieveInputElement
+updated operator element->updated operator element:Update size
+
+
+expandable− Update all parents
+updated operator element->input component:OnContainedUpdated
+input component->input component:Update size
+
+expandable− update chain children position
+input component->child:OnParentUpdated
+child->child:UpdatePositionRelativeToParent
+child->grandchild nested if block terminator:OnParentUpdated
+grandchild nested if block terminator->grandchild nested if block terminator:UpdatePositionRelativeToParent
+end
+
+expandable- update chain parents
+input component->Parent:OnChildUpdated
+Parent->GrandParent If Block:OnChildUpdated
+grandchild nested if block terminator<-GrandParent If Block:GetBottomPosition
+GrandParent If Block->GrandParent If Block:Update size Based on nested children
+GrandParent If Block->If block parent:OnChildUpdated
+GrandParent If Block->If block child:OnParentUpdated
+If block child->If block child:UpdatePositionRelativeToParent
+end
+end
+
+expandable− Update contained inputs
+updated operator element->input element:OnParentUpdated
+input element->input element:UpdatePositionRelativeToSlot
+end

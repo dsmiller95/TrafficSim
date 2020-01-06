@@ -14,6 +14,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking.DragDroppable
         {
             get => this.GetComponent<RectTransform>();
         }
+        private Vector2 defaultSize;
 
         public Type acceptedType
         {
@@ -33,6 +34,12 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking.DragDroppable
 
         //private Type acceptedType;
         private InputElementDragDrop linkedElement;
+
+        public void Start()
+        {
+            this.defaultSize = this.rectTransform.sizeDelta;
+        }
+
         public bool AttemptToFitElement(InputElementDragDrop element, Vector2 mousePos)
         {
             if (element.outputType == this.acceptedType
@@ -45,18 +52,46 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking.DragDroppable
             return false;
         }
 
-        public void PositionLinkedRelativeToSlot()
+        /// <summary>
+        /// Change size to contain the element inside, returning the difference from its past size
+        /// </summary>
+        /// <param name="size">the new size to take on</param>
+        /// <returns>The difference between the new size and the old size</returns>
+        public Vector2 ChangeSizeToFitLinkedElement()
         {
-            if (this.linkedElement != null)
+            var newSize = this.linkedElement?.rectTransform.sizeDelta ?? this.defaultSize;
+            var output = newSize - this.rectTransform.sizeDelta;
+            this.rectTransform.sizeDelta = newSize;
+            return output;
+        }
+
+        public bool AttemptAbortChild(InputElementDragDrop contained)
+        {
+            if(contained == this.linkedElement)
             {
-                this.linkedElement.PositionSelfRelativeToContainer(this.rectTransform.position);
+                this.linkedElement = null;
+                return true;
             }
+            return false;
+        }
+
+        /// <summary>
+        /// alert the contained component that the container has been updated
+        /// </summary>
+        public void PassContainerUpdated()
+        {
+            this.linkedElement?.OnContainerUpdated(this.rectTransform.position);
         }
 
         public IScriptableInput GetInputScript()
         {
-            return this.linkedElement.myScript;
+            return this.linkedElement?.myScript;
         }
+
+        //public bool DoesExacltyMatchInputElement(IInputElement input)
+        //{
+        //    return input == linkedElement;
+        //}
     }
 
     //used as a handy way to configure the dropSlot via the gameObject editor

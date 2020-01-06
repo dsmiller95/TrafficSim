@@ -4,6 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 {
@@ -30,14 +31,9 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 }
             }
         }
-        private SeriesDragDrop childAsDragDrop
+        private IChainableSeries<IScriptableEntry> childAsChainable
         {
-            get => this.nextExecutingChild as SeriesDragDrop;
-        }
-
-        public RectTransform rectTransform
-        {
-            get => this.GetComponent<RectTransform>();
+            get => this.nextExecutingChild as IChainableSeries<IScriptableEntry>;
         }
 
         // Use this for initialization
@@ -67,9 +63,9 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         }
 
         /// <summary>
-        /// This object has another Lockable hovering over it, ready to link when dropped
+        /// This object has another DragDrop hovering over it, ready to link when dropped
         /// </summary>
-        /// <param name="other">the other Lockable which is about to link</param>
+        /// <param name="other">the other DragDrop which is about to link</param>
         public override void DragabbleLinkEnter(BaseDragDrop other)
         {
             // Only respond if a link was possible
@@ -107,7 +103,8 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             base.OnDragging(data);
             if (this.GetCanHaveChildren())
             {
-                this.childAsDragDrop?.UpdatePositionRelativeToParent(this.GetChildTransform());
+                this.childAsChainable?.OnParentUpdated(this.GetChildTransform());
+                //this.childAsDragDrop?.UpdatePositionRelativeToParent(this.GetChildTransform());
             }
         }
 
@@ -154,17 +151,18 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             var compatableParent = this.parent as SeriesDragDrop;
             this.transform.position = compatableParent.transform.position + childTransform;
             this.OnPositionChanged();
-            this.childAsDragDrop?.UpdatePositionRelativeToParent(this.GetChildTransform());
+            //this.childAsDragDrop?.UpdatePositionRelativeToParent(this.GetChildTransform());
         }
 
         public void OnSelfEjected()
         {
             this.rectTransform.position = this.rectTransform.position + this.rectTransform.sizeDelta.x * Vector3.right;
-            var childAsDragDrop = this.nextExecutingChild as SeriesDragDrop;
-            if(childAsDragDrop != null)
-            {
-                childAsDragDrop.UpdatePositionRelativeToParent(this.GetChildTransform());
-            }
+            this.childAsChainable?.OnParentUpdated(this.GetChildTransform());
+            //var childAsDragDrop = this.nextExecutingChild as SeriesDragDrop;
+            //if(childAsDragDrop != null)
+            //{
+            //    childAsDragDrop.UpdatePositionRelativeToParent(this.GetChildTransform());
+            //}
         }
 
         private Vector2 GetMousePosOnCanvas()
@@ -193,39 +191,23 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             return this.parent;
         }
 
-        public bool SpliceChildIn(IChainableSeries<IScriptableEntry> newChild)
+        public void SpliceChildIn(IChainableSeries<IScriptableEntry> newChild)
         {
             if(newChild == null || !this.GetCanHaveChildren() || !newChild.GetCanHaveParents())
             {
-                return false;
+                return;
             }
             var originalChild = this.GetChild();
 
             this.nextExecutingChild = newChild;
             newChild.SetParent(this);
 
-            var success = true;
-            if(originalChild != null)
-            {
-                originalChild.SetParent(null);
+            ChainableSeriesUtilities.UpdateOriginalChildAfterSplice(originalChild, newChild);
 
-                var newTerminator = ChainableSeriesUtilities.GetChainTerminator(newChild);
+            newChild.OnParentUpdated(this.GetChildTransform());
+            this.OnChildUpdated(this);
 
-                if (newTerminator.GetCanHaveChildren())
-                {
-                    //May not need to go full recursive here -- at this point, newTerminator has no children and originaChild has no parents
-                    // Could end up being a simple linking method??
-                    success = newTerminator.SpliceChildIn(originalChild);
-                }
-                else
-                {
-                    //the new chain has a no-append terminator. Kick out the old chain after to replacing it with the new
-                    originalChild.OnSelfEjected();
-                }
-            }
-
-            (newChild as SeriesDragDrop)?.UpdatePositionRelativeToParent(this.GetChildTransform());
-            return success;
+            //(newChild as SeriesDragDrop)?.UpdatePositionRelativeToParent(this.GetChildTransform());
         }
 
         public IScriptableEntry GetData()
@@ -246,6 +228,26 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 return true;
             }
             return false;
+        }
+
+        public virtual void OnChildUpdated(IChainableSeries<IScriptableEntry> child)
+        {
+            this.parent?.OnChildUpdated(this);
+        }
+
+        public virtual void OnParentUpdated(Vector2 childTransform)
+        {
+            this.UpdatePositionRelativeToParent(childTransform);
+            this.childAsChainable?.OnParentUpdated(this.GetChildTransform());
+        }
+
+        public void SimpleAppendChild(IChainableSeries<IScriptableEntry> child)
+        {
+            if (!this.GetCanHaveChildren() || this.nextExecutingChild != null)
+            {
+                throw new InvalidOperationException($"Cannot append child to {this.name}");
+            }
+            this.nextExecutingChild = child;
         }
     }
 }

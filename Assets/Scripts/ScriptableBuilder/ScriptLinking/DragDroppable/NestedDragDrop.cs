@@ -41,6 +41,12 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 this.terminatorBehavior.SetPairedNestingParent(ownerScriptTyped);
             }
 
+            public void AbortSelf()
+            {
+                this.parent?.AbortChild(this);
+                this.parent = null;
+            }
+
             /// <summary>
             /// used to set the child of this node as associated with the Terminator. 
             /// </summary>
@@ -91,9 +97,21 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 this.parent = parent;
             }
 
-            public bool SpliceChildIn(IChainableSeries<IScriptableEntry> chainHead)
+            public void SpliceChildIn(IChainableSeries<IScriptableEntry> chainHead)
             {
-                return false;
+            }
+
+            public void OnChildUpdated(IChainableSeries<IScriptableEntry> child)
+            {
+            }
+
+            public void OnParentUpdated(Vector2 childTranslation)
+            {
+            }
+
+            public void SimpleAppendChild(IChainableSeries<IScriptableEntry> child)
+            {
+                throw new InvalidOperationException("Cannot append child to component, no children allowed");
             }
         }
 
@@ -126,10 +144,10 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             base.DraggableDroppedOnto(other);
         }
 
-        public override void OnPositionChanged()
+        public override void OnDragging(PointerEventData data)
         {
-            (this.nestedSeries as SeriesDragDrop)?.UpdatePositionRelativeToParent(this.GetNestedChildTransform());
-            base.OnPositionChanged();
+            base.OnDragging(data);
+            this.nestedSeries?.OnParentUpdated(this.GetNestedChildTransform());
         }
 
         public override bool AbortChild(IChainableSeries<IScriptableEntry> child)
@@ -139,7 +157,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 return true;
             }
 
-            if(this.nestedSeries == child)
+            if (this.nestedSeries == child)
             {
                 this.nestedSeries = null;
                 return true;
@@ -149,26 +167,21 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
 
         protected override Vector3 GetChildTransform()
         {
-            //TODO: find the end of the nestedSeries
             if (this.nestedSeries != null)
             {
-                var currentTerminator = ChainableSeriesUtilities.GetChainTerminator(this.nestedSeries);
-                if(currentTerminator == this.pairedNestedBlockTerminator)
+                var currentPhysicalTerminator = ChainableSeriesUtilities.GetChainTerminator(this.nestedSeries);
+                if (currentPhysicalTerminator == this.pairedNestedBlockTerminator)
                 {
-                    currentTerminator = currentTerminator.GetParent();
+                    currentPhysicalTerminator = currentPhysicalTerminator.GetParent();
                 }
 #pragma warning disable CS0252 // Possible unintended reference comparison; left hand side needs cast
-                if (currentTerminator == this)
+                if (currentPhysicalTerminator == this || !(currentPhysicalTerminator is SeriesDragDrop))
 #pragma warning restore CS0252 // Possible unintended reference comparison; left hand side needs cast
                 {
                     return base.GetChildTransform();
                 }
-                var draggableTerminator = currentTerminator as SeriesDragDrop;
-                if(draggableTerminator == null)
-                {
-                    return base.GetChildTransform();
-                }
-                return base.GetChildTransform() + (draggableTerminator.transform.position - this.transform.position - this.GetNestedOffset());
+                var draggableTerminator = currentPhysicalTerminator as SeriesDragDrop;
+                return base.GetChildTransform() + (draggableTerminator.transform.position + -this.transform.position + -this.GetNestedOffset());
             }
             return base.GetChildTransform();
         }
@@ -190,42 +203,27 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         private void DropInNestedSeries(IChainableSeries<IScriptableEntry> newNested)
         {
             Debug.Log($"adding {(newNested as MonoBehaviour)?.name} as nested under {this.name}");
-
-            if(newNested == null || !newNested.GetCanHaveParents())
+            if (newNested == null || !newNested.GetCanHaveParents())
             {
                 throw new Exception("ERROR: invalid nesting. see logs");
             }
 
             var originalNested = this.nestedSeries;
-
             this.nestedSeries = newNested;
             newNested.SetParent(this);
 
-            if(originalNested != null)
-            {
-                originalNested.SetParent(null);
+            ChainableSeriesUtilities.UpdateOriginalChildAfterSplice(originalNested, newNested);
 
-                var newTerminator = ChainableSeriesUtilities.GetChainTerminator(newNested);
+            this.OnChildUpdated(this.nestedSeries);
+            //var currentTerminator = ChainableSeriesUtilities.GetChainTerminator(this.nestedSeries);
+            //if (currentTerminator.GetCanHaveChildren())
+            //{
+            //    this.pairedNestedBlockTerminator.GetParent()?.AbortChild(this.pairedNestedBlockTerminator);
+            //    this.pairedNestedBlockTerminator.SetParent(null);
+            //    currentTerminator.SpliceChildIn(this.pairedNestedBlockTerminator);
+            //}
 
-                if (newTerminator.GetCanHaveChildren())
-                {
-                    newTerminator.SpliceChildIn(originalNested);
-                }
-                else
-                {
-                    originalNested.OnSelfEjected();
-                }
-            }
-
-            var currentTerminator = ChainableSeriesUtilities.GetChainTerminator(this.nestedSeries);
-            if (currentTerminator.GetCanHaveChildren())
-            {
-                this.pairedNestedBlockTerminator.GetParent()?.AbortChild(this.pairedNestedBlockTerminator);
-                this.pairedNestedBlockTerminator.SetParent(null);
-                currentTerminator.SpliceChildIn(this.pairedNestedBlockTerminator);
-            }
-
-            (newNested as SeriesDragDrop).UpdatePositionRelativeToParent(this.GetNestedChildTransform());
+            //(newNested as SeriesDragDrop).UpdatePositionRelativeToParent(this.GetNestedChildTransform());
         }
 
         /// <summary>
@@ -237,11 +235,30 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
         {
             var mousePositionRelativeToLocal = this.rectTransform.InverseTransformPoint(Input.mousePosition);
             // Only nest if the mouse position is on right half of this element
-            if(mousePositionRelativeToLocal.x > this.rectTransform.sizeDelta.x / 2)
+            if (mousePositionRelativeToLocal.x > this.rectTransform.sizeDelta.x / 2)
             {
                 return true;
             }
             return false;
+        }
+
+        public override void OnChildUpdated(IChainableSeries<IScriptableEntry> child)
+        {
+            if(child == this.nestedSeries)
+            {
+                var currentTerminator = ChainableSeriesUtilities.GetChainTerminator(this.nestedSeries);
+                if(currentTerminator != this.pairedNestedBlockTerminator)
+                {
+                    this.pairedNestedBlockTerminator.AbortSelf();
+
+                    if (currentTerminator.GetCanHaveChildren())
+                    {
+                        currentTerminator.SimpleAppendChild(this.pairedNestedBlockTerminator);
+                    }
+                }
+                this.GetChild().OnParentUpdated(this.GetChildTransform());
+            }
+            base.OnChildUpdated(child);
         }
     }
 }

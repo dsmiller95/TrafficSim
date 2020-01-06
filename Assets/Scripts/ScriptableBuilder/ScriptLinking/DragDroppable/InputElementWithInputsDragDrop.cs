@@ -14,8 +14,11 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
     ///     will allow for self to be dragged into "slots", but cannot enter into a Series chain
     ///     This variation accepts other inputs and performs some operation on the two. Used for things like arithmetic operations
     /// </summary>
-    public class InputElementWithInputsDragDrop : InputElementDragDrop
+    public class InputElementWithInputsDragDrop : InputElementDragDrop, IInputElementContainer
     {
+        /// <summary>
+        /// all input slots, ordered from left to right in increasing x-order
+        /// </summary>
         private List<InputDropSlot> inputSlots;
         public override void Start()
         {
@@ -26,6 +29,7 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             }
 
             this.inputSlots = new List<InputDropSlot>(this.GetComponentsInChildren<InputDropSlot>())
+                .OrderBy(slot => slot.transform.position.x)
                 .ToList();
 
             if (!(this.myScript as IScriptableWithInputs).ValidateInputs(this.inputSlots.Select(slot => slot.acceptedType)))
@@ -43,26 +47,85 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
                 return;
             }
 
+            InputDropSlot slotFit = null;
             foreach (var slot in this.inputSlots)
             {
                 if (slot.AttemptToFitElement(inputElement, Input.mousePosition))
                 {
-                    slot.PositionLinkedRelativeToSlot();
+                    slotFit = slot;
                     break;
                 }
+            }
+            if (!slotFit)
+            {
+                return;
             }
 
             (this.myScript as IScriptableWithInputs).SetInputElements(this.inputSlots
                 .Select(slot => slot?.GetInputScript())
                 .ToList());
-        }
-        public override void PositionSelfRelativeToContainer(Vector2 containerPosition)
-        {
-            base.PositionSelfRelativeToContainer(containerPosition);
+
+            this.OnContainedUpdated(inputElement);
             this.inputSlots.ForEach(slot =>
             {
-                slot.PositionLinkedRelativeToSlot();
+                slot.PassContainerUpdated();
             });
+            //slotFit.PassContainerUpdated();
+        }
+
+        /// <summary>
+        /// look at current children or contents and adjust size accordingly
+        /// Will also adjust the size of the slots accordingly, but won't update the positions of the elments inside the slots
+        /// </summary>
+        public void AdjustSizeBasedOnCurrentChildren()
+        {
+            var currentLeftOffset = 0f;
+            var maxVerticalSlotSize = 0f;
+            for (var i = 0; i < this.inputSlots.Count; i++)
+            {
+                var diff = this.inputSlots[i].ChangeSizeToFitLinkedElement();
+                maxVerticalSlotSize = Mathf.Max(maxVerticalSlotSize, diff.y);
+
+            }
+            //TODO: finish method implementation
+        }
+
+        protected override void PositionSelfRelativeToContainer(Vector2 containerPosition)
+        {
+            base.PositionSelfRelativeToContainer(containerPosition);
+        }
+
+        public override void OnContainerUpdated(Vector2 slotTranslation)
+        {
+            base.OnContainerUpdated(slotTranslation);
+            this.inputSlots.ForEach(slot =>
+            {
+                slot.PassContainerUpdated();
+            });
+        }
+
+        /// <summary>
+        /// When any of the children elements are updated. In this implementation, pass the event upwards if possible
+        /// </summary>
+        public void OnContainedUpdated(IInputElement child)
+        {
+            this.AdjustSizeBasedOnCurrentChildren();
+            this.container?.OnContainedUpdated(this);
+            this.inputSlots
+                .Where(input => input != child).ToList()
+                .ForEach(slot =>
+                {
+                    slot.PassContainerUpdated();
+                });
+        }
+
+        /// <summary>
+        /// Called when a child has been removed from its ownership
+        /// </summary>
+        public void OnContainedRemoved(IInputElement child)
+        {
+            this.inputSlots.ForEach(slot => slot.AttemptAbortChild(child as InputElementDragDrop));
+            this.OnContainedUpdated(null);
         }
     }
 }

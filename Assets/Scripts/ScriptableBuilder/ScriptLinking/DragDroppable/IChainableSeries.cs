@@ -37,7 +37,18 @@ public interface IChainableSeries<T>
     /// </summary>
     /// <param name="chainHead">The head of the child to be attached</param>
     /// <returns>true if the child has been spliced in, false otherwise</returns>
-    bool SpliceChildIn(IChainableSeries<T> chainHead);
+    void SpliceChildIn(IChainableSeries<T> chainHead);
+
+    /// <summary>
+    /// Attempt to simply append a child to this chain. Will only work if this component accepts children, and has no current child
+    ///     Will throw error if this item cannot have children, or if it currently has a child
+    ///     Will not trigger any update cycles
+    /// </summary>
+    /// <param name="child">The head of the child to be attached</param>
+    void SimpleAppendChild(IChainableSeries<T> child);
+
+    void OnChildUpdated(IChainableSeries<T> child);
+    void OnParentUpdated(Vector2 childTranslation);
 
 }
 
@@ -57,5 +68,35 @@ public class ChainableSeriesUtilities
             currentTerminator = currentTerminator.GetChild();
         }
         return currentTerminator;
+    }
+
+    /// <summary>
+    /// after a child has been replaced by a new chain spliced in place of it, this method will attempt to append the original child
+    ///     at the end of the chain which was spliced in. If that's not possible, then the original child is ejected
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="originalChild">The child which has been displaced from its parent</param>
+    /// <param name="newChild">The head of the chainable chain which took the place of the original child</param>
+    /// <returns></returns>
+    public static void UpdateOriginalChildAfterSplice<T>(IChainableSeries<T> originalChild, IChainableSeries<T> newChild)
+    {
+        if (originalChild != null)
+        {
+            originalChild.SetParent(null);
+
+            var newTerminator = GetChainTerminator(newChild);
+
+            if (newTerminator.GetCanHaveChildren())
+            {
+                //May not need to go full recursive here -- at this point, newTerminator has no children and originaChild has no parents
+                // Could end up being a simple linking method??
+                newTerminator.SimpleAppendChild(originalChild);
+            }
+            else
+            {
+                //the new chain has a no-append terminator. Kick out the old chain after to replacing it with the new
+                originalChild.OnSelfEjected();
+            }
+        }
     }
 }

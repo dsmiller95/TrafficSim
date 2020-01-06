@@ -31,10 +31,32 @@ namespace Assets.Scripts.ScriptableBuilder.ScriptLinking
             }
         }
 
-        public virtual void PositionSelfRelativeToContainer(Vector2 containerPosition)
+        public override void OnDragStart()
         {
-            this.transform.position = containerPosition;
+            base.OnDragStart();
+            this.container?.OnContainedRemoved(this);
+        }
+
+        public virtual void OnContainerUpdated(Vector2 slotTranslation)
+        {
+            this.PositionSelfRelativeToContainer(slotTranslation);
+        }
+
+        protected virtual void PositionSelfRelativeToContainer(Vector2 containerSlotPosition)
+        {
+            this.transform.position = containerSlotPosition;
             base.OnPositionChanged();
+        }
+
+        protected IInputElementContainer container;
+        public void SetContainer(IInputElementContainer container)
+        {
+            this.container = container;
+        }
+
+        public Vector2 GetRectSize()
+        {
+            return this.rectTransform.sizeDelta;
         }
     }
 }
